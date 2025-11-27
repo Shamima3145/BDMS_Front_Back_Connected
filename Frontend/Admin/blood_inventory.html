@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood Inventory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+<!-- Header -->
+<header class="bg-gradient-to-r from-[#FFFAEF] to-[#A83231] flex justify-between items-center px-8 py-3">
+  <!-- Left Section -->
+  <div class="flex items-center gap-3">
+    <img src="./assets/logo.png" alt="BloodBridge Logo" class="w-10 h-10" />
+    <span class="font-bold text-[#A83231] text-xl tracking-wide">BLOODBRIDGE - Admin Dashboard</span>
+  </div>
+
+  <!-- Right Section -->
+  <div class="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
+    <span class="font-semibold text-[#A83231]">Admin</span>
+    <button class="ml-2 bg-[#942222] text-white px-3 py-1 rounded shadow-md flex items-center gap-2 hover:bg-[#ed0000] transition-colors duration-200">
+      Logout
+      <svg class="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.616 16C1.15533 16 0.771 15.846 0.463 15.538C0.155 15.23 0.000666667 14.8453 0 14.384V1.616C0 1.15533 0.154333 0.771 0.463 0.463C0.771666 0.155 1.156 0.000666667 1.616 0H8.019V1H1.616C1.462 1 1.32067 1.064 1.192 1.192C1.06333 1.32 0.999333 1.46133 1 1.616V14.385C1 14.5383 1.064 14.6793 1.192 14.808C1.32 14.9367 1.461 15.0007 1.615 15H8.019V16H1.616ZM12.462 11.539L11.76 10.819L14.079 8.5H5.192V7.5H14.079L11.759 5.18L12.461 4.462L16 8L12.462 11.539Z" fill="white"/>
+      </svg>
+    </button>
+  </div>
+</header>
+  <div class="min-h-screen flex mx-auto bg-white shadow-xl rounded-xl ">
+    <aside class="bg-[#A83231] text-white w-52 flex flex-col py-8  shadow-lg rounded-tr-3xl rounded-br-3xl">
+      <nav class="flex flex-col gap-2  text-white px-2">
+        <a href="./admin_dashboard.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+        <a href="./blood_inventory.html" class="flex items-center gap-3 py-2 px-4 rounded-xl bg-white/20 font-bold shadow text-[#ffefef]"><i class="fa-solid fa-database"></i> Inventory</a>
+        <div class="relative inline-block text-left">
+          <button onclick="toggleDropdown()" type="button"
+    class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"
+    id="requestsButton" aria-haspopup="true" aria-expanded="false">
+    <i class="fa-solid fa-droplet"></i> Requests
+    <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div id="dropdownMenu" class="hidden absolute z-10 mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="requestsButton">
+      <a href="./public_requests.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Public</a>
+      <a href="./hospital_requests.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Hospitals</a>
+    </div>
+  </div>
+        </div>
+        <a href="./donors.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-users"></i> Donors</a>
+        <a href="./reports.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-file-lines"></i> Reports</a>
+        <a href="./settings.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-gear"></i> Settings</a>
+      </nav>
+    </aside>
+  <div class="px-4 mt-2 w-full">
+ <!-- Search & Filter Section -->
+  <div class="bg-white shadow-md rounded-lg p-4 mt-2 mb-6 flex flex-wrap gap-4 items-center">
+    <input 
+      type="text" 
+      placeholder="Search by Blood Group..." 
+      class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 focus:outline-none flex-1"
+    >
+    <select class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 focus:outline-none">
+      <option value="">Filter by Status</option>
+      <option value="Sufficient">Sufficient</option>
+      <option value="Low">Low</option>
+      <option value="Out of Stock">Out of Stock</option>
+    </select>
+    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">
+      + Add New Stock
+    </button>
+  </div>
+
+  <!-- Table Section -->
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="min-w-full border-collapse text-left">
+      <thead>
+        <tr class="bg-[#9B2C2C] text-white">
+          <th class="p-3">Blood Group</th>
+          <th class="p-3">Units Available</th>
+          <th class="p-3">Last Updated</th>
+          <th class="p-3">Status</th>
+          <th class="p-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Example Row 1 -->
+        <tr class="border-b hover:bg-gray-50">
+          <td class="p-3 font-semibold text-gray-700">A+</td>
+          <td class="p-3">12</td>
+          <td class="p-3">30 Oct 2025</td>
+          <td class="p-3">
+            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Sufficient</span>
+          </td>
+          <td class="p-3 text-center">
+            <button class="bg-yellow-200 hover:bg-yellow-700 text-red-900 px-4 py-2 rounded-lg">Edit</button>
+            <button class="bg-red-400 hover:bg-red-700 text-white px-4 py-2 rounded-lg">Delete</button>
+          </td>
+        </tr>
+
+        <!-- Example Row 2 -->
+        <tr class="border-b hover:bg-gray-50">
+          <td class="p-3 font-semibold text-gray-700">B+</td>
+          <td class="p-3">4</td>
+          <td class="p-3">30 Oct 2025</td>
+          <td class="p-3">
+            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">Low</span>
+          </td>
+          <td class="p-3 text-center">
+            <button class="bg-yellow-200 hover:bg-yellow-700 text-red-900 px-4 py-2 rounded-lg">Edit</button>
+            <button class="bg-red-400 hover:bg-red-700 text-white px-4 py-2 rounded-lg">Delete</button>
+          </td>
+        </tr>
+
+        <!-- Example Row 3 -->
+        <tr class="hover:bg-gray-50">
+          <td class="p-3 font-semibold text-gray-700">O−</td>
+          <td class="p-3">0</td>
+          <td class="p-3">29 Oct 2025</td>
+          <td class="p-3">
+            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">Out of Stock</span>
+          </td>
+          <td class="p-3 text-center">
+            <button class="bg-yellow-200 hover:bg-yellow-700 text-red-900 px-4 py-2 rounded-lg">Edit</button>
+            <button class="bg-red-400 hover:bg-red-700 text-white px-4 py-2 rounded-lg">Delete</button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+  </div>
+  </div>
+  <script src="../index.js"></script>
+</body>
+</html>

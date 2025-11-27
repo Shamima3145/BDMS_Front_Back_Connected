@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Request</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    /* Responsive overrides for: 1024px, 768px, 425px, 375px, 320px
+       Non-invasive: CSS only, minimal use of !important to override Tailwind utilities. */
+
+    *, *::before, *::after { box-sizing: border-box; }
+    img { max-width:100%; height:auto; display:block; }
+
+    /* Layout base */
+    .min-h-screen.flex { display:flex; align-items:stretch; gap:0; }
+    aside.w-52 { width:13rem; min-width:13rem; flex-shrink:0; transition:all .18s ease; }
+    .px-4.w-full { flex:1; padding:1.25rem; }
+
+    /* Header */
+    header { padding:1rem 2rem; align-items:center; }
+    header img { max-height:3rem; }
+
+    /* Table defaults */
+    .overflow-x-auto { width:100%; -webkit-overflow-scrolling:touch; }
+    table.min-w-full { width:100%; border-collapse:collapse; }
+    table.min-w-full th, table.min-w-full td { padding:.6rem .75rem; text-align:left; word-break:break-word; }
+
+    /* Controls */
+    #searchPublic, #entriesPublic { max-width: 16rem; }
+
+    /* ------------------ <= 1024px ------------------ */
+    @media (max-width:1024px) {
+      aside.w-52 { width:12rem; min-width:12rem; }
+      .text-3xl { font-size:1.6rem !important; }
+      .px-4.w-full { padding:1rem; }
+    }
+
+    /* ------------------ <= 768px (tablet / mobile landscape) ------------------ */
+    @media (max-width:768px) {
+      .min-h-screen.flex { flex-direction:column; }
+      aside.w-52 {
+        width:100% !important; min-width:100% !important;
+        border-right:none !important;
+        border-bottom:1px solid rgba(0,0,0,0.06) !important;
+        border-radius:0 !important;
+        padding-top:.6rem !important; padding-bottom:.6rem !important;
+      }
+      header { padding:.8rem 1rem; flex-wrap:wrap; }
+      header .flex.items-center.gap-3 { gap:.5rem; }
+      .px-4.w-full { padding:.9rem !important; margin-top:.5rem; }
+      table.min-w-full th, table.min-w-full td { padding:.5rem .6rem; font-size:.95rem; }
+      #searchPublic { max-width: 28rem; width:100%; }
+    }
+
+    /* ------------------ <= 425px (large phones) ------------------ */
+    @media (max-width:425px) {
+      header { padding:.5rem .75rem !important; }
+      header img { max-height:2.4rem; }
+      .px-4.w-full { padding:.6rem !important; }
+      .text-3xl { font-size:1.25rem !important; }
+      #searchPublic, .w-40, #entriesPublic { width:100% !important; min-width:0 !important; max-width:100% !important; }
+      .flex.flex-wrap.justify-between.items-center.mb-4 { gap:.5rem; }
+    }
+
+    /* ------------------ <= 375px (small phones) ------------------ */
+    @media (max-width:375px) {
+      .font-bold { font-size:.95rem !important; }
+      header img { max-height:2.1rem !important; }
+      .px-4.w-full { padding:.5rem !important; }
+      table.min-w-full th, table.min-w-full td { padding:.45rem .5rem; font-size:.92rem; }
+      aside.w-52 nav a { padding:.5rem .65rem !important; font-size:.95rem; }
+      .text-2xl { font-size:1rem !important; }
+    }
+
+    /* ------------------ <= 320px (extra small) ------------------ */
+    @media (max-width:320px) {
+      .font-bold { font-size:.88rem !important; }
+      h1.text-3xl { font-size:1.05rem !important; }
+      button, input, select { font-size:.95rem !important; padding:.45rem .5rem !important; }
+      .px-4.w-full { padding:.45rem !important; }
+      aside.w-52 { padding-left:.5rem !important; padding-right:.5rem !important; }
+    }
+
+    /* ------------------ Stacked table view on very small screens ------------------ */
+    @media (max-width:520px) {
+      /* hide header row and show rows as blocks with label/value pairs */
+      table.min-w-full thead { display:none; }
+      table.min-w-full tbody tr { display:block; margin-bottom:.6rem; border-radius:.5rem; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.04); border:1px solid rgba(0,0,0,0.03); }
+      table.min-w-full tbody td { display:flex; justify-content:space-between; padding:.6rem .75rem; border-bottom:1px solid rgba(0,0,0,0.04); }
+      table.min-w-full tbody td:last-child { border-bottom:0; }
+      /* Insert pseudo-labels using CSS — best-effort fallback */
+      table.min-w-full tbody td:nth-child(1)::before { content: "Request ID"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(2)::before { content: "Patient"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(3)::before { content: "Blood"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(4)::before { content: "Units"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(5)::before { content: "Requested By"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(6)::before { content: "Status"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td:nth-child(7)::before { content: "Actions"; font-weight:600; margin-right:.5rem; color:#A83231; }
+      table.min-w-full tbody td::before { display:inline-block; width:38%; white-space:nowrap; font-size:.85rem; }
+      table.min-w-full tbody td span, table.min-w-full tbody td a, table.min-w-full tbody td button { max-width:58%; text-align:right; overflow-wrap:break-word; }
+    }
+
+    /* Touch improvements */
+    button, input, select { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- Navbar -->
+<header class="bg-gradient-to-r from-[#FFFAEF] to-[#A83231] flex justify-between items-center px-8 py-3">
+  <!-- Left Section -->
+  <div class="flex items-center gap-3">
+    <img src="./assets/logo.png" alt="BloodBridge Logo" class="w-10 h-10" />
+    <span class="font-bold text-[#A83231] text-xl tracking-wide">BLOODBRIDGE - Admin Dashboard</span>
+  </div>
+
+  <!-- Right Section -->
+  <div class="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
+    <span class="font-semibold text-[#A83231]">Admin</span>
+    <button class="ml-2 bg-[#942222] text-white px-3 py-1 rounded shadow-md flex items-center gap-2 hover:bg-[#ed0000] transition-colors duration-200">
+      Logout
+      <svg class="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.616 16C1.15533 16 0.771 15.846 0.463 15.538C0.155 15.23 0.000666667 14.8453 0 14.384V1.616C0 1.15533 0.154333 0.771 0.463 0.463C0.771666 0.155 1.156 0.000666667 1.616 0H8.019V1H1.616C1.462 1 1.32067 1.064 1.192 1.192C1.06333 1.32 0.999333 1.46133 1 1.616V14.385C1 14.5383 1.064 14.6793 1.192 14.808C1.32 14.9367 1.461 15.0007 1.615 15H8.019V16H1.616ZM12.462 11.539L11.76 10.819L14.079 8.5H5.192V7.5H14.079L11.759 5.18L12.461 4.462L16 8L12.462 11.539Z" fill="white"/>
+      </svg>
+    </button>
+  </div>
+</header>
+  <div class="min-h-screen flex mx-auto bg-white shadow-xl rounded-xl">
+    <!-- Sidebar -->
+    <aside class="bg-[#A83231] text-white w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl">
+      <nav class="flex flex-col gap-2  text-white px-2">
+        <a href="./admin_dashboard.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+        <a href="./blood_inventory.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-database"></i> Inventory</a>
+        <div class="relative inline-block text-left">
+          <button onclick="toggleDropdown()" type="button"
+    class="flex items-center gap-3 py-2 px-4 rounded-xl bg-white/20 font-bold shadow text-[#ffefef] focus:outline-none"
+    id="requestsButton" aria-haspopup="true" aria-expanded="false">
+    <i class="fa-solid fa-droplet"></i> Requests
+    <svg class="ml-2 h-4 w-4 text-[#ffefef]" xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div id="dropdownMenu" class="hidden absolute z-10 mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="requestsButton">
+      <a href="./public_requests.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Public</a>
+      <a href="./hospital_requests.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Hospitals</a>
+    </div>
+  </div>
+        </div>
+        <a href="./donors.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-users"></i> Donors</a>
+        <a href="./reports.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-file-lines"></i> Reports</a>
+        <a href="./settings.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-white/20"><i class="fa-solid fa-gear"></i> Settings</a>
+      </nav>
+    </aside>
+    <!-- Main Content -->
+<div class="px-4 mt-4 w-full">
+  <h1 class="text-3xl font-bold text-[#A83231] mb-8">Blood Requests</h1>
+  <h2 class="text-2xl font-semibold text-[#B53535]">Requests from Publics</h2>
+<!-- Pagination + Entries Per Page + Search for Requests from Hospitals -->
+<div class="bg-white shadow-md rounded-lg mb-8 p-4">
+  <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+    <!-- Entries Per Page Selector -->
+    <div class="flex items-center gap-1 text-sm">
+      <label for="entriesPublic" class="text-[#A83231] font-semibold">Show</label>
+      <select id="entriesPublic" class="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-200">
+        <option>5</option>
+        <option>10</option>
+        <option>15</option>
+      </select>
+      <span class="text-[#A83231]">entries</span>
+    </div>
+    <!-- Search -->
+    <div class="flex items-center gap-2">
+      <input id="searchPublic" type="text" placeholder="Search..." class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 focus:outline-none w-40 sm:w-60" />
+    </div>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-black text-sm">
+      <thead class="bg-[#A83231] text-white">
+        <tr>
+          <th class="py-3 px-4 font-medium">Request ID</th>
+          <th class="py-3 px-4 font-medium">Patient Name</th>
+          <th class="py-3 px-4 font-medium">Blood Group</th>
+          <th class="py-3 px-4 font-medium">Units</th>
+          <th class="py-3 px-4 font-medium">Requested By</th>
+          <th class="py-3 px-4 font-medium">Status</th>
+          <th class="py-3 px-4 font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="publicTableBody">
+        <!-- JS will render rows -->
+      </tbody>
+    </table>
+  </div>
+  <!-- Pagination Controls -->
+  <div class="flex flex-wrap justify-between items-center mt-4 gap-3">
+    <div class="text-gray-500 text-xs md:text-sm" id="publicTableInfo"></div>
+    <div class="flex gap-1" id="publicPagination"></div>
+  </div>
+</div>
+</div>
+ </div>
+<script src="../index.js"></script>
+</body>
+</html>

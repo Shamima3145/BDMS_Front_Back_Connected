@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login page</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      body {
+        background: linear-gradient(to bottom, #fffaed, #c74949);
+      }
+    </style> 
+  </head>
+  <body class="flex justify-center items-center min-h-screen">
+    
+    <div>
+      <!-- Logo -->
+    <div class="flex flex-col items-center mb-2 mt-2">
+      <a href="./landing_page.html">
+        <img src="./assets/logo.png" alt="BloodBridge Logo" class="w-20 h-20 mb-2" />
+      </a>
+    </div>
+      <!-- Form Started  -->
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
+        <h2 class="text-xl font-semibold text-gray-800 text-center mb-2 mt-0">
+          Login
+        </h2>
+        <p class="text-sm text-gray-500 text-center mb-6">
+          Hey, Enter your details to get sign in to your account
+        </p>
+
+        <!-- Login Form -->
+        <form onsubmit="handleSubmit(event)" action="#" method="POST">
+          <input
+            id="name"
+            type="name"
+            placeholder="Enter Name"
+            class="w-full p-3 mb-4 border border-black-300 rounded-md text-lg"
+            required
+          />
+          <input
+          id="email"
+            type="email"
+            placeholder="Enter Email"
+            class="w-full p-3 mb-4 border border-black-300 rounded-md text-lg"
+            required
+          />
+          <input
+          id="password"
+            type="password"
+            placeholder="Password"
+            class="w-full p-3 mb-4 border border-black-700 rounded-md text-lg"
+            required
+          />
+
+          <a
+            href="#"
+            class="text-sm text-blue-500 hover:underline mb-6 block text-right"
+            >Forgot password?</a
+          >
+
+          <button type="submit" class="w-full bg-[#a21c1c] text-white font-semibold py-2 rounded-lg hover:bg-[#8c1717] transition-all">Login</button>
+          
+        </form>
+
+        <!-- Social Sign-In -->
+        <div class="my-6 text-center">
+          <p class="text-sm text-black-500">Or Sign in with</p>
+          <div class="flex justify-center gap-4 mt-3">
+            <button
+              class="p-3 bg-white-200 rounded-full hover:bg-[#FFFAEF] transition duration-200"
+            >
+              <img src="./assets/google_logo.png"" alt="Google" class="h-6 w-6">
+            </button>
+            <button
+              class="p-3 bg-white-200 rounded-full hover:bg-[#FFFAEF] transition duration-200"
+            >
+              <img src="./assets/fb_logo.png" alt="Facebook" class="h-6 w-6" />
+            </button>
+            <button
+              class="p-3 bg-white-200 rounded-full hover:bg-[#FFFAEF] transition duration-200"
+            >
+              <img src="./assets/linkedin_logo.png" alt="LinkedIn" class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-sm text-black-500 mt-4">
+          <p>
+            Copyright @bloodbridge 2024 |
+            <a href="#" class="hover:underline">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <script src="./index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#head {
+    color: red;
+    font-size: 20px;
+    border: 1px solid black;
+    /* margin: 20px 100px 50px; */
+    padding: 10px 15px 25px;
+}
+
+.sp {
+    border: 1px solid blue;
+    margin: 100px;
+    padding: 12px 50px;
+    display: inline-block;
+}
+
+#tt {
+    position: absolute;
+    top: 50px;
+    left: 100px;
+}

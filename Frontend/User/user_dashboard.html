@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+   <style>
+    /* Responsive overrides (no HTML changes). Targets: 1024, 768, 425, 375, 320px */
+    *, *::before, *::after { box-sizing: border-box; }
+    img { max-width:100%; height:auto; display:block; }
+
+    /* Base layout */
+    .min-h-screen.flex { display:flex; align-items:stretch; gap:0; }
+    aside.w-52 { width:13rem; min-width:13rem; flex-shrink:0; transition: all .18s ease; }
+    section.flex-1 { flex:1; padding:2.5rem; }
+
+    /* Grid behavior */
+    .grid.grid-cols-3 { display:grid; grid-template-columns: 2fr 1fr; gap:2rem; }
+    .col-span-2 { grid-column: 1 / span 1; } /* left panel wider */
+    .grid.grid-cols-2 { display:grid; grid-template-columns: repeat(2, 1fr); gap:1rem; }
+
+    /* Utility paddings used in markup */
+    .px-10 { padding-left:2.5rem !important; padding-right:2.5rem !important; }
+    .py-10 { padding-top:2.5rem !important; padding-bottom:2.5rem !important; }
+    header { padding:1rem 2rem; align-items:center; }
+    header img { max-height:3rem; }
+
+    /* Tables */
+    .overflow-x-auto { width:100%; -webkit-overflow-scrolling: touch; }
+    table.min-w-full { width:100%; border-collapse:collapse; }
+    table.min-w-full th, table.min-w-full td { padding:.6rem .85rem; }
+
+    /* Footer */
+    footer .max-w-6xl { padding-left:1rem; padding-right:1rem; }
+
+    /* -------------- <= 1024px -------------- */
+    @media (max-width:1024px) {
+      aside.w-52 { width:12rem; min-width:12rem; }
+      .grid.grid-cols-3 { grid-template-columns: 1.6fr .9fr; gap:1.25rem; }
+      header img { max-height:2.8rem; }
+      .text-3xl { font-size:1.5rem !important; }
+    }
+
+    /* -------------- <= 768px (tablet / mobile landscape) -------------- */
+    @media (max-width:768px) {
+      .min-h-screen.flex { flex-direction: column; }
+      aside.w-52 {
+        width:100% !important; min-width:100% !important;
+        border-right:none !important;
+        border-bottom:1px solid rgba(0,0,0,0.06) !important;
+        border-radius:0 !important;
+        padding-top:.8rem !important; padding-bottom:.8rem !important;
+      }
+      section.flex-1, .px-10, .py-10 { padding:1rem !important; }
+      .grid.grid-cols-3 { grid-template-columns: 1fr; gap:1rem; }
+      .col-span-2 { grid-column: auto; }
+      .grid.grid-cols-2 { grid-template-columns: 1fr; gap:.75rem; }
+      header { padding:.75rem 1rem; flex-wrap:wrap; }
+      header button { margin-left:auto; }
+      table.min-w-full th, table.min-w-full td { padding:.5rem .6rem; font-size:.95rem; }
+    }
+
+    /* -------------- <= 425px (large phones) -------------- */
+    @media (max-width:425px) {
+      header { padding:.5rem .75rem; }
+      header .font-bold { font-size:1rem; }
+      section.flex-1 { padding:.7rem !important; }
+      .text-3xl { font-size:1.25rem !important; }
+      .w-10.h-10 { width:2.1rem !important; height:2.1rem !important; }
+      /* make search/input full width where a fixed width was used */
+      #searchDonation, #searchTrack, .w-40 { width:100% !important; min-width:0 !important; }
+      .px-10 { padding-left:.6rem !important; padding-right:.6rem !important; }
+      .py-10 { padding-top:.6rem !important; padding-bottom:.6rem !important; }
+    }
+
+    /* -------------- <= 375px (small phones) -------------- */
+    @media (max-width:375px) {
+      .font-bold { font-size:.95rem !important; }
+      header img { max-height:2.2rem; }
+      .px-10 { padding-left:.5rem !important; padding-right:.5rem !important; }
+      .py-10 { padding-top:.5rem !important; padding-bottom:.5rem !important; }
+      .text-3xl { font-size:1.15rem !important; }
+      table.min-w-full th, table.min-w-full td { padding:.45rem .55rem; font-size:.95rem; }
+      aside.w-52 nav a { padding:.5rem .75rem !important; }
+    }
+
+    /* -------------- <= 320px (extra small) -------------- */
+    @media (max-width:320px) {
+      .font-bold { font-size:.88rem !important; }
+      h1.text-3xl { font-size:1.05rem !important; }
+      button, input, select { font-size:.95rem !important; }
+      .px-10 { padding-left:.4rem !important; padding-right:.4rem !important; }
+      .py-10 { padding-top:.45rem !important; padding-bottom:.45rem !important; }
+      aside.w-52 { padding-left:.5rem !important; padding-right:.5rem !important; }
+    }
+
+    /* Touch target improvements */
+    button, input, select { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-green-50 font-sans">
+      <!-- Header -->
+  <header class="bg-gradient-to-r from-white to-green-600 flex justify-between items-center px-8 py-3 text-white">
+    <div class="flex items-center gap-3">
+      <img src="./assets/logo.png" alt="BloodBridge Logo" class="w-10 h-10" />
+      <span class="font-bold text-green-800 text-xl tracking-wide">BLOODBRIDGE - User Dashboard</span>
+    </div>
+    <button class="ml-4 bg-green-800 text-white px-3 py-1 rounded shadow-md flex items-center gap-2 hover:bg-green-500 transition-colors duration-200">
+            Logout <svg class="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.616 16C1.15533 16 0.771 15.846 0.463 15.538C0.155 15.23 0.000666667 14.8453 0 14.384V1.616C0 1.15533 0.154333 0.771 0.463 0.463C0.771666 0.155 1.156 0.000666667 1.616 0H8.019V1H1.616C1.462 1 1.32067 1.064 1.192 1.192C1.06333 1.32 0.999333 1.46133 1 1.616V14.385C1 14.5383 1.064 14.6793 1.192 14.808C1.32 14.9367 1.461 15.0007 1.615 15H8.019V16H1.616ZM12.462 11.539L11.76 10.819L14.079 8.5H5.192V7.5H14.079L11.759 5.18L12.461 4.462L16 8L12.462 11.539Z" fill="white"/>
+            </svg>
+          </button>
+  </header>
+      <!-- Sidebar -->
+    <div class="min-h-screen flex mx-auto bg-gradient-to-br from-white to-green-100 shadow-xl rounded-xl">
+    <aside class="w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl from-white to-green-100 border-r border-green-700 ">
+      <div class="mb-8 flex flex-col items-center text-center">
+        <p class="font-bold mt-4 text-green-800">John Doe</p>
+        <p class="text-sm text-gray-500">john@example.com</p>
+      </div>
+      <nav class="flex flex-col gap-2  text-green-700 px-2">
+        <a href="./User/user_dashboard.html" class="flex items-center gap-3 py-2 px-4 rounded-xl bg-green-100/20 font-bold shadow text-green-800"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+        <a href="./donor_history.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-green-100/20"><i class="fa-solid fa-database"></i> History</a>
+        <a href="./track_donation.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-green-100/20"> <i class="fa-solid fa-droplet"></i> Track</a>
+      </nav>
+    </aside>
+
+    <!-- Main Panel -->
+    <section class="flex-1 py-10 px-10">
+      <!-- Panels -->
+      <div class="grid grid-cols-3 gap-8">
+        <!-- General Information Panel -->
+        <div class="col-span-2 bg-white rounded-xl shadow p-7">
+          <h3 class="font-bold text-xl text-green-800 mb-4">General Information</h3>
+          <form class="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">First Name</label>
+              <input type="text" class="w-full border rounded-md px-3 py-2" value="John" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Last Name</label>
+              <input type="text" class="w-full border rounded-md px-3 py-2" value="Doe" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Blood Group</label>
+              <select class="w-full border rounded-md px-3 py-2">
+                <option>A+</option>
+                <option>A-</option>
+                <option>B+</option>
+                <option>B-</option>
+                <option>AB+</option>
+                <option>AB-</option>
+                <option>O+</option>
+                <option>O-</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Gender</label>
+              <select class="w-full border rounded-md px-3 py-2">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Area</label>
+              <input type="text" class="w-full border rounded-md px-3 py-2" value="Dhanmondi" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Contact</label>
+              <input type="text" class="w-full border rounded-md px-3 py-2" value="+880123456789" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
+              <input type="email" class="w-full border rounded-md px-3 py-2" value="john@example.com" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Ever Donated?</label>
+              <select class="w-full border rounded-md px-3 py-2">
+                <option>No</option>
+                <option>Yes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Total Donations</label>
+              <input type="text" class="w-full border rounded-md px-3 py-2" value="0" readonly />
+            </div>
+          </form>
+          <button class="mt-8 px-7 py-2 rounded-lg bg-green-800 text-white font-semibold shadow hover:bg-green-500 transition block ml-auto">Save all</button>
+        </div>
+
+        <!-- Right Side Panels -->
+        <div class="flex flex-col gap-8">
+          <!-- Password Update Panel -->
+          <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="font-bold text-lg text-green-800 mb-2">Password Information</h3>
+            <form>
+              <label class="block text-sm font-semibold text-gray-600 mb-1">Current Password</label>
+              <input type="password" class="w-full border rounded-md px-3 py-2 mb-3" placeholder="Enter your current password" />
+              <label class="block text-sm font-semibold text-gray-600 mb-1">New Password</label>
+              <input type="password" class="w-full border rounded-md px-3 py-2 mb-3" placeholder="Enter your new password" />
+              <ul class="text-xs text-gray-500 mb-2">
+                <li>At least 8 characters, up to 12</li>
+                <li>At least one lowercase & uppercase</li>
+              </ul>
+              <button class="w-full bg-green-800 text-white py-2 rounded-lg font-medium hover:bg-green-400">Save all</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+    <!-- Footer Section -->
+   <footer class="bg-[#006747] text-white mt-0 py-8">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center px-4 sm:px-6 gap-5 md:gap-0">
+    <!-- logo and name -->
+    <div class="flex items-center gap-3 mb-6 md:mb-0 justify-center">
+      <img
+        src="./assets/logo.png"
+        alt="BloodBridge Logo"
+        class="w-10 h-10 rounded-lg bg-white p-1"
+      />
+      <span class="font-bold text-xl tracking-wide">BLOODBRIDGE</span>
+    </div>
+    <!-- details -->
+    <div class="order-3 md:order-none mt-6 md:mt-0 text-center text-sm text-white opacity-70 px-2 md:px-6">
+      © 2025 BloodBridge. All rights reserved.
+    </div>
+    <div class="flex flex-col items-center">
+      <span class="font-bold">Contact Us</span>
+      <span class="text-md">info@bloodbridge.com</span>
+      <span class="text-md">+123 456 7890</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

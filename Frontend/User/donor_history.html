@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    /* Responsive overrides for 1024px, 768px, 425px, 375px, 320px
+       Non-invasive: uses !important only where needed to override Tailwind utilities */
+    *, *::before, *::after { box-sizing: border-box; }
+    img { max-width:100%; height:auto; display:block; }
+
+    /* Base layout */
+    .min-h-screen.flex { display:flex; align-items:stretch; gap:0; }
+    aside.w-52 { width:13rem; min-width:13rem; flex-shrink:0; transition: all .18s ease; }
+    .px-6, .py-6 { padding:1.5rem; }
+    .overflow-x-auto { width:100%; -webkit-overflow-scrolling: touch; }
+    table.min-w-full { width:100%; border-collapse:collapse; }
+    table.min-w-full th, table.min-w-full td { padding:.6rem .85rem; word-break:break-word; white-space:normal; }
+
+    /* Desktop / large */
+    @media (max-width:1024px) {
+      aside.w-52 { width:12rem; min-width:12rem; }
+      .text-3xl { font-size:1.5rem !important; }
+      .px-6 { padding-left:1.25rem !important; padding-right:1.25rem !important; }
+    }
+
+    /* Tablet / mobile landscape: stack sidebar above content */
+    @media (max-width:768px) {
+      .min-h-screen.flex { flex-direction:column; }
+      aside.w-52 {
+        width:100% !important; min-width:100% !important;
+        border-right:none !important;
+        border-bottom:1px solid rgba(0,0,0,0.06) !important;
+        border-radius:0 !important;
+        padding-top:.75rem !important; padding-bottom:.75rem !important;
+      }
+      .px-6, .py-6 { padding:.9rem !important; }
+      table.min-w-full th, table.min-w-full td { padding:.5rem .6rem; font-size:.95rem; }
+    }
+
+    /* Large phones: make search full width and reduce paddings */
+    @media (max-width:425px) {
+      header { padding:.5rem .75rem !important; }
+      .px-6, .py-6 { padding:.6rem !important; }
+      .text-3xl { font-size:1.25rem !important; }
+      #searchDonation, #searchTrack, .w-40 { width:100% !important; min-width:0 !important; }
+    }
+
+    /* Small phones */
+    @media (max-width:375px) {
+      .font-bold { font-size:.95rem !important; }
+      header img { max-height:2.2rem !important; }
+      .px-6, .py-6 { padding:.5rem !important; }
+      table.min-w-full th, table.min-w-full td { padding:.45rem .55rem; font-size:.95rem; }
+      aside.w-52 nav a { padding:.5rem .75rem !important; }
+    }
+
+    /* Extra small */
+    @media (max-width:320px) {
+      .font-bold { font-size:.88rem !important; }
+      h1.text-3xl { font-size:1.05rem !important; }
+      button, input, select { font-size:.95rem !important; }
+      .px-6, .py-6 { padding-left:.4rem !important; padding-right:.4rem !important; padding-top:.45rem !important; padding-bottom:.45rem !important; }
+      aside.w-52 { padding-left:.5rem !important; padding-right:.5rem !important; }
+    }
+
+    /* Touch target improvements */
+    button, input, select { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-green-50 font-sans">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-white to-green-600 flex justify-between items-center px-8 py-3 text-white">
+    <div class="flex items-center gap-3">
+      <img src="./assets/logo.png" alt="BloodBridge Logo" class="w-10 h-10" />
+      <span class="font-bold text-green-800 text-xl tracking-wide">BLOODBRIDGE - User Dashboard</span>
+    </div>
+    <button class="ml-4 bg-green-800 text-white px-3 py-1 rounded shadow-md flex items-center gap-2 hover:bg-green-650 transition-colors duration-200">
+            Logout <svg class="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.616 16C1.15533 16 0.771 15.846 0.463 15.538C0.155 15.23 0.000666667 14.8453 0 14.384V1.616C0 1.15533 0.154333 0.771 0.463 0.463C0.771666 0.155 1.156 0.000666667 1.616 0H8.019V1H1.616C1.462 1 1.32067 1.064 1.192 1.192C1.06333 1.32 0.999333 1.46133 1 1.616V14.385C1 14.5383 1.064 14.6793 1.192 14.808C1.32 14.9367 1.461 15.0007 1.615 15H8.019V16H1.616ZM12.462 11.539L11.76 10.819L14.079 8.5H5.192V7.5H14.079L11.759 5.18L12.461 4.462L16 8L12.462 11.539Z" fill="white"/>
+            </svg>
+          </button>
+    </a>
+  </header>
+      <!-- Sidebar -->
+    <div class="min-h-screen flex mx-auto bg-gradient-to-br from-white to-green-100 shadow-xl rounded-xl">
+    <aside class="w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl from-white to-green-100 border-r border-green-700 ">
+      <div class="mb-8 flex flex-col items-center text-center">
+        <p class="font-bold mt-4 text-green-800">John Doe</p>
+        <p class="text-sm text-gray-500">john@example.com</p>
+      </div>
+      <nav class="flex flex-col gap-2  text-green-700 px-2">
+        <a href="./user_dashboard.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-green-100/20"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+        <a href="./donor_history.html" class="flex items-center gap-3 py-2 px-4 rounded-xl bg-green-100/20 font-bold shadow text-green-800"><i class="fa-solid fa-database"></i> History</a>
+        <a href="./track_donation.html" class="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-green-100/20"> <i class="fa-solid fa-droplet"></i> Track</a>
+      </nav>
+    </aside>
+
+    <!-- Main Panel -->
+
+  <div class="px-6 py-6 w-full bg-gradient-to-br from-white to-green-100 rounded-lg shadow-md">
+    <!-- Page Header and Controls -->
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+      <h1 class="text-3xl font-bold text-green-700">Donation History</h1>
+
+      <button class="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition whitespace-nowrap">
+        Export History
+      </button>
+    </div>
+
+    <!-- Entries per page and Search -->
+    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+      <div class="flex items-center gap-1 text-sm">
+        <label for="entriesDonation" class="text-green-700 font-semibold">Show</label>
+        <select id="entriesDonation" class="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-400">
+          <option>5</option>
+          <option>10</option>
+          <option>15</option>
+        </select>
+        <span class="text-green-700">entries</span>
+      </div>
+    <div class="flex items-center gap-2">
+      <input id="searchDonation" type="text" placeholder="Search..." class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:outline-none w-40 sm:w-60" />
+    </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-black text-sm">
+        <thead class="bg-green-700 text-white">
+          <tr>
+            <th class="py-4 px-6 text-left font-medium">Donation ID</th>
+            <th class="py-4 px-6 text-left font-medium">Date</th>
+            <th class="py-4 px-6 text-left font-medium">Blood Group</th>
+            <th class="py-4 px-6 text-left font-medium">Units Donated</th>
+            <th class="py-4 px-6 text-left font-medium">Donation Center</th>
+            <th class="py-4 px-6 text-left font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody id="donationTableBody">
+          <!-- JS renders rows -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="flex flex-wrap justify-between items-center mt-4 gap-3">
+      <div class="text-gray-500 text-xs md:text-sm" id="donationTableInfo"></div>
+      <div class="flex gap-1" id="donationPagination"></div>
+    </div>
+  </div>
+
+  </div>
+    <!-- Footer Section -->
+<footer class="bg-[#006747] text-white mt-0 py-8">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center px-4 sm:px-6 gap-5 md:gap-0">
+    <!-- logo and name -->
+    <div class="flex items-center gap-3 mb-6 md:mb-0 justify-center">
+      <img
+        src="./assets/logo.png"
+        alt="BloodBridge Logo"
+        class="w-10 h-10 rounded-lg bg-white p-1"
+      />
+      <span class="font-bold text-xl tracking-wide">BLOODBRIDGE</span>
+    </div>
+    <!-- details -->
+    <div class="order-3 md:order-none mt-6 md:mt-0 text-center text-sm text-white opacity-70 px-2 md:px-6">
+      © 2025 BloodBridge. All rights reserved.
+    </div>
+    <div class="flex flex-col items-center">
+      <span class="font-bold">Contact Us</span>
+      <span class="text-md">info@bloodbridge.com</span>
+      <span class="text-md">+123 456 7890</span>
+    </div>
+  </div>
+</footer>
+<script>
+const donationData = [
+  { id: "D-001", date: "15 Oct 2025", blood: "O+", units: 1, center: "Central Blood Bank", status: "Completed" },
+  { id: "D-002", date: "20 Aug 2025", blood: "A-", units: 2, center: "City Hospital", status: "Completed" },
+  { id: "D-003", date: "05 Jul 2025", blood: "B+", units: 1, center: "Community Blood Center", status: "Completed" },
+  // Add more entries as desired
+];
+
+let currentDonationPage = 1, donationEntriesPerPage = 5, donationSearch = '';
+
+function renderDonationTable() {
+  const searchVal = donationSearch.toLowerCase();
+  let filtered = donationData.filter(r =>
+    r.id.toLowerCase().includes(searchVal) ||
+    r.date.toLowerCase().includes(searchVal) ||
+    r.blood.toLowerCase().includes(searchVal) ||
+    r.center.toLowerCase().includes(searchVal) ||
+    r.status.toLowerCase().includes(searchVal)
+  );
+
+  const totalRows = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / donationEntriesPerPage));
+  currentDonationPage = Math.max(1, Math.min(currentDonationPage, totalPages));
+  const start = (currentDonationPage - 1) * donationEntriesPerPage;
+  const visible = filtered.slice(start, start + donationEntriesPerPage);
+
+  document.getElementById('donationTableBody').innerHTML = visible.map(r => `
+    <tr class="border-b hover:bg-gray-50">
+      <td class="py-3 px-6 font-semibold">${r.id}</td>
+      <td class="py-3 px-6">${r.date}</td>
+      <td class="py-3 px-6 font-extrabold text-red-600">${r.blood}</td>
+      <td class="py-3 px-6">${r.units}</td>
+      <td class="py-3 px-6">${r.center}</td>
+      <td class="py-3 px-6">
+        <span class="rounded-full px-3 py-1 text-xs font-semibold ${
+          r.status === "Completed" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+        }">${r.status}</span>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('donationTableInfo').textContent =
+    `Showing ${totalRows ? start + 1 : 0} to ${Math.min(start + donationEntriesPerPage, totalRows)} of ${totalRows} entries`;
+
+  let pageBtns = '';
+  for(let i = 1; i <= totalPages; i++) {
+    pageBtns += `<button onclick="gotoDonationPage(${i})" class="px-2 py-1 mx-0.5 rounded ${currentDonationPage === i ? 'bg-green-200 text-green-800 font-bold' : 'bg-gray-100 text-green-700 hover:bg-gray-200'}">${i}</button>`;
+  }
+
+  document.getElementById('donationPagination').innerHTML = `
+    <button onclick="prevDonationPage()" class="px-3 py-1 rounded-lg text-sm bg-green-700 text-white hover:bg-green-600 transition ${currentDonationPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentDonationPage === 1 ? 'disabled' : ''}>Prev</button>
+    ${pageBtns}
+    <button onclick="nextDonationPage()" class="px-3 py-1 rounded-lg text-sm bg-green-700 text-white hover:bg-green-600 transition ${currentDonationPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}" ${currentDonationPage === totalPages ? 'disabled' : ''}>Next</button>
+  `;
+}
+
+function prevDonationPage() { currentDonationPage--; renderDonationTable(); }
+function nextDonationPage() { currentDonationPage++; renderDonationTable(); }
+function gotoDonationPage(n) { currentDonationPage = n; renderDonationTable(); }
+
+document.getElementById('entriesDonation').addEventListener('change', (e) => {
+  donationEntriesPerPage = +e.target.value; currentDonationPage = 1; renderDonationTable();
+});
+
+document.getElementById('searchDonation').addEventListener('input', (e) => {
+  donationSearch = e.target.value; currentDonationPage = 1; renderDonationTable();
+});
+
+renderDonationTable();
+</script>
+</body>
+</html>
