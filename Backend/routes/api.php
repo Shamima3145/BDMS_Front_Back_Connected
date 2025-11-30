@@ -17,6 +17,10 @@ Route::post('/login', [UsersController::class, 'login'])->name('login');
 Route::post('/register', [UsersController::class, 'register'])->name('register');
 Route::post('/hospital-register', [UsersController::class, 'hospitalRegister'])->name('hospital.register');
 
+// BLOOD REQUEST ROUTES
+Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
+Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
+
 // PROTECTED ROUTES
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -28,6 +32,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Profile & Password Routes
     Route::put('/user/profile', [UsersController::class, 'updateProfile']);
     Route::put('/user/password', [UsersController::class, 'updatePassword']);
+
+    // Hospital Profile & Password Routes
+    Route::put('/hospital/profile', [UsersController::class, 'updateHospitalProfile']);
+    Route::put('/hospital/password', [UsersController::class, 'updateHospitalPassword']);
 
     // Admin Routes
     Route::get('/admin/users', [UsersController::class, 'getAllUsers']);

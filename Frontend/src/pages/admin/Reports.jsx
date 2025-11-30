@@ -12,43 +12,18 @@ const Reports = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear] = useState(new Date().getFullYear())
 
-  // Mock report data
   const monthlyStats = {
-    totalDonations: 145,
-    newDonors: 23,
-    bloodCollected: 72500, // in ml
-    requestsFulfilled: 134,
-    topBloodGroup: 'O+',
-    growth: '+12%',
+    totalDonations: 0,
+    newDonors: 0,
+    bloodCollected: 0,
+    requestsFulfilled: 0,
+    topBloodGroup: '-',
+    growth: '0%',
   }
 
-  const bloodGroupDistribution = [
-    { group: 'A+', donations: 32, percentage: 22 },
-    { group: 'A-', donations: 12, percentage: 8 },
-    { group: 'B+', donations: 28, percentage: 19 },
-    { group: 'B-', donations: 8, percentage: 6 },
-    { group: 'AB+', donations: 15, percentage: 10 },
-    { group: 'AB-', donations: 5, percentage: 3 },
-    { group: 'O+', donations: 35, percentage: 24 },
-    { group: 'O-', donations: 10, percentage: 7 },
-  ]
-
-  const topDonors = [
-    { name: 'Ahmed Rahman', donations: 5, bloodGroup: 'A+' },
-    { name: 'Fatima Khan', donations: 4, bloodGroup: 'O+' },
-    { name: 'Mohammad Ali', donations: 4, bloodGroup: 'B+' },
-    { name: 'Karim Hossain', donations: 3, bloodGroup: 'O-' },
-    { name: 'Ayesha Siddiqui', donations: 3, bloodGroup: 'AB+' },
-  ]
-
-  const monthlyTrends = [
-    { month: 'Jun', donations: 120 },
-    { month: 'Jul', donations: 135 },
-    { month: 'Aug', donations: 128 },
-    { month: 'Sep', donations: 142 },
-    { month: 'Oct', donations: 138 },
-    { month: 'Nov', donations: 145 },
-  ]
+  const bloodGroupDistribution = []
+  const topDonors = []
+  const monthlyTrends = []
 
   const handleExportPDF = () => {
     toast.success('Report exported as PDF successfully!')

@@ -1,16 +1,44 @@
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import DataTable from '@/components/DataTable'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { useSelector } from 'react-redux'
 
 const HospitalRequests = () => {
-  const hospitalRequestsData = [
-    { id: 'HR-001', hospital: 'City Hospital', blood: 'B+', units: 5, by: 'Dr. Karim', status: 'Pending' },
-    { id: 'HR-002', hospital: 'General Hospital', blood: 'O-', units: 3, by: 'Dr. Hassan', status: 'Accepted' },
-    { id: 'HR-003', hospital: 'Memorial Clinic', blood: 'A+', units: 7, by: 'Dr. Fatima', status: 'Declined' },
-    { id: 'HR-004', hospital: 'Community Care', blood: 'AB-', units: 4, by: 'Dr. Reza', status: 'Pending' },
-    { id: 'HR-005', hospital: "St. Mary's", blood: 'B-', units: 2, by: 'Dr. Jamal', status: 'Accepted' },
-    { id: 'HR-006', hospital: 'County Hospital', blood: 'O+', units: 6, by: 'Dr. Nadia', status: 'Pending' },
-  ]
+  const [hospitalRequestsData, setHospitalRequestsData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const token = useSelector((state) => state.auth.token)
+
+  useEffect(() => {
+    const fetchHospitalRequests = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/blood-requests', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const hospitalRequests = response.data.requests.filter(
+          (request) => request.hospital_name !== null
+        )
+        const formattedData = hospitalRequests.map((request) => ({
+          id: request.request_id,
+          hospital: request.hospital_name,
+          blood: request.blood_group,
+          units: request.units,
+          by: request.requested_by,
+          status: request.status,
+        }))
+        setHospitalRequestsData(formattedData)
+        setLoading(false)
+      } catch (error) {
+        toast.error('Failed to fetch hospital requests')
+        setLoading(false)
+      }
+    }
+
+    fetchHospitalRequests()
+  }, [token])
 
   const columns = [
     { header: 'Request ID', accessor: 'id', className: 'font-semibold' },

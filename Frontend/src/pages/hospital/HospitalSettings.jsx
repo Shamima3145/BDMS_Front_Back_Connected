@@ -3,6 +3,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { useSelector, useDispatch } from 'react-redux'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { setCredentials } from '@/store/slices/authSlice'
 import * as yup from 'yup'
@@ -16,14 +17,14 @@ import { passwordChangeSchema } from '@/utils/validationSchemas'
 const hospitalInfoSchema = yup.object({
   hospitalName: yup.string().required('Hospital name is required'),
   registrationId: yup.string().required('Registration ID is required'),
-  type: yup.string().required('Hospital type is required'),
+  hospitalType: yup.string().required('Hospital type is required'),
   yearEstablished: yup.number().min(1800).max(2099).required('Year is required'),
   address: yup.string().required('Address is required'),
   city: yup.string().required('City is required'),
   district: yup.string().required('District is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
-  contact: yup.string().required('Contact number is required'),
-  emergency: yup.string(),
+  contactNumber: yup.string().required('Contact number is required'),
+  emergencyHotline: yup.string(),
   hasBloodBank: yup.string().required('Please select an option'),
 })
 
@@ -31,28 +32,57 @@ const HospitalSettings = () => {
   const user = useSelector((state) => state.auth.user)
   const token = useSelector((state) => state.auth.token)
   const dispatch = useDispatch()
+  const [hospitalData, setHospitalData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch hospital data from backend
+  useEffect(() => {
+    const fetchHospitalData = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/hospital/dashboard', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setHospitalData(response.data.hospital)
+        setLoading(false)
+      } catch (error) {
+        toast.error('Failed to fetch hospital data')
+        setLoading(false)
+      }
+    }
+
+    fetchHospitalData()
+  }, [token])
 
   const {
     register: registerHospital,
     handleSubmit: handleHospitalSubmit,
     formState: { errors: hospitalErrors, isSubmitting: isHospitalSubmitting },
     watch,
+    reset: resetHospital,
   } = useForm({
     resolver: yupResolver(hospitalInfoSchema),
-    defaultValues: {
-      hospitalName: user?.hospitalname || '',
-      registrationId: user?.registrationid || '',
-      type: user?.type || '',
-      yearEstablished: user?.yearestablished || '',
-      address: user?.address || '',
-      city: user?.city || '',
-      district: user?.district || '',
-      email: user?.email || '',
-      contact: user?.contact || user?.contactnumber || '',
-      emergency: user?.emergency || '',
-      hasBloodBank: user?.hasbloodbank || '',
-    },
   })
+
+  // Update form with fetched data
+  useEffect(() => {
+    if (hospitalData) {
+      resetHospital({
+        hospitalName: hospitalData.hospitalName || '',
+        registrationId: hospitalData.registrationId || '',
+        hospitalType: hospitalData.hospitalType || '',
+        yearEstablished: hospitalData.yearEstablished || '',
+        address: hospitalData.address || '',
+        city: hospitalData.city || '',
+        district: hospitalData.district || '',
+        email: hospitalData.email || '',
+        contactNumber: hospitalData.contactNumber || '',
+        emergencyHotline: hospitalData.emergencyHotline || '',
+        hasBloodBank: hospitalData.hasBloodBank || '',
+      })
+    }
+  }, [hospitalData, resetHospital])
 
   const {
     register: registerPassword,
@@ -67,21 +97,20 @@ const HospitalSettings = () => {
 
   const onHospitalSubmit = async (data) => {
     try {
-      // TODO: Backend route needed
       const response = await axios.put(
         'http://127.0.0.1:8000/api/hospital/profile',
         {
-          hospitalname: data.hospitalName,
-          registrationid: data.registrationId,
-          type: data.type,
-          yearestablished: data.yearEstablished,
+          hospitalName: data.hospitalName,
+          registrationId: data.registrationId,
+          hospitalType: data.hospitalType,
+          yearEstablished: data.yearEstablished,
           address: data.address,
           city: data.city,
           district: data.district,
           email: data.email,
-          contact: data.contact,
-          emergency: data.emergency,
-          hasbloodbank: data.hasBloodBank,
+          contactNumber: data.contactNumber,
+          emergencyHotline: data.emergencyHotline,
+          hasBloodBank: data.hasBloodBank,
         },
         {
           headers: {
@@ -90,15 +119,16 @@ const HospitalSettings = () => {
         }
       )
 
-      const updatedUser = response.data.user
+      const updatedHospital = response.data.hospital
       dispatch(
         setCredentials({
-          user: updatedUser,
+          user: updatedHospital,
           token: token,
           userType: localStorage.getItem('userType'),
         })
       )
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      localStorage.setItem('user', JSON.stringify(updatedHospital))
+      setHospitalData(updatedHospital)
 
       toast.success('Hospital information updated successfully!')
     } catch (error) {
@@ -126,6 +156,14 @@ const HospitalSettings = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update password')
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-gray-600">Loading hospital data...</p>
+      </div>
+    )
   }
 
   return (
@@ -169,11 +207,11 @@ const HospitalSettings = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="type">Hospital Type</Label>
+                  <Label htmlFor="hospitalType">Hospital Type</Label>
                   <Select
-                    id="type"
-                    {...registerHospital('type')}
-                    className={hospitalErrors.type ? 'border-red-500' : ''}
+                    id="hospitalType"
+                    {...registerHospital('hospitalType')}
+                    className={hospitalErrors.hospitalType ? 'border-red-500' : ''}
                   >
                     <option value="">Select type</option>
                     <option value="Government">Government</option>
@@ -181,8 +219,8 @@ const HospitalSettings = () => {
                     <option value="NGO">NGO</option>
                     <option value="Clinic">Clinic</option>
                   </Select>
-                  {hospitalErrors.type && (
-                    <p className="text-red-500 text-sm mt-1">{hospitalErrors.type.message}</p>
+                  {hospitalErrors.hospitalType && (
+                    <p className="text-red-500 text-sm mt-1">{hospitalErrors.hospitalType.message}</p>
                   )}
                 </div>
                 <div>
@@ -261,21 +299,21 @@ const HospitalSettings = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contact">Contact Number</Label>
+                  <Label htmlFor="contactNumber">Contact Number</Label>
                   <Input
-                    id="contact"
-                    {...registerHospital('contact')}
-                    className={hospitalErrors.contact ? 'border-red-500' : ''}
+                    id="contactNumber"
+                    {...registerHospital('contactNumber')}
+                    className={hospitalErrors.contactNumber ? 'border-red-500' : ''}
                   />
-                  {hospitalErrors.contact && (
-                    <p className="text-red-500 text-sm mt-1">{hospitalErrors.contact.message}</p>
+                  {hospitalErrors.contactNumber && (
+                    <p className="text-red-500 text-sm mt-1">{hospitalErrors.contactNumber.message}</p>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="emergency">Emergency Hotline</Label>
+                  <Label htmlFor="emergencyHotline">Emergency Hotline</Label>
                   <Input
-                    id="emergency"
-                    {...registerHospital('emergency')}
+                    id="emergencyHotline"
+                    {...registerHospital('emergencyHotline')}
                     placeholder="Optional"
                   />
                 </div>
@@ -300,7 +338,7 @@ const HospitalSettings = () => {
               <div className="flex justify-end">
                 <Button
                   type="submit"
-                  className="bg-blue-800 hover:bg-blue-500"
+                  className="bg-[#0EA5E9] hover:bg-[#0284C7]"
                   disabled={isHospitalSubmitting}
                 >
                   {isHospitalSubmitting ? 'Saving...' : 'Save all'}
@@ -360,7 +398,7 @@ const HospitalSettings = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-800 hover:bg-blue-400"
+                className="w-full bg-[#0EA5E9] hover:bg-[#0284C7]"
                 disabled={isPasswordSubmitting}
               >
                 {isPasswordSubmitting ? 'Saving...' : 'Save all'}

@@ -93,7 +93,7 @@ const UserLayout = () => {
         </section>
       </div>
 
-      <Footer />
+      
     </div>
   )
 }

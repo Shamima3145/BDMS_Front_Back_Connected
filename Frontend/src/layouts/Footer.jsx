@@ -17,7 +17,7 @@ const Footer = ({ bgColor = 'bg-secondary' }) => {
             alt="BloodBridge Logo"
             className="w-10 h-10 rounded-lg bg-white p-1"
           />
-          <span className="font-bold text-xl tracking-wide">BLOODBRIDGE</span>
+          <span className="font-bold text-lg tracking-wide">BLOODBRIDGE</span>
         </div>
 
         {/* copyright */}
@@ -28,10 +28,10 @@ const Footer = ({ bgColor = 'bg-secondary' }) => {
         {/* contact */}
         <div className="flex flex-col items-center">
           <span className="font-bold">Contact Us</span>
-          <a href="mailto:info@bloodbridge.com" className="text-md hover:underline">
+          <a href="mailto:info@bloodbridge.com" className="text-sm hover:underline">
             info@bloodbridge.com
           </a>
-          <a href="tel:+1234567890" className="text-md hover:underline">
+          <a href="tel:+1234567890" className="text-sm hover:underline">
             +123 456 7890
           </a>
         </div>

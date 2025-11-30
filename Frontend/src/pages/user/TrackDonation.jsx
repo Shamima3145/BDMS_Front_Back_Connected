@@ -5,11 +5,7 @@ import DataTable from '@/components/DataTable'
 import { Button } from '@/components/ui/Button'
 
 const TrackDonation = () => {
-  const trackData = [
-    { id: 'D-010', blood: 'O+', units: 1, center: 'Central Blood Bank', status: 'Pending', completion: '16 Nov 2025' },
-    { id: 'D-011', blood: 'A-', units: 2, center: 'City Hospital', status: 'In Process', completion: '18 Nov 2025' },
-    { id: 'D-012', blood: 'B+', units: 1, center: 'Community Blood Center', status: 'Completed', completion: 'Completed' },
-  ]
+  const trackData = []
 
   const columns = [
     { header: 'Donation ID', accessor: 'id', className: 'font-semibold' },
@@ -52,6 +48,7 @@ const TrackDonation = () => {
           data={trackData}
           columns={columns}
           searchPlaceholder="Search donations..."
+          paginationColor="green"
         />
       </motion.div>
     </div>

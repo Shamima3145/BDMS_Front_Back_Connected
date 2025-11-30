@@ -252,6 +252,7 @@ const Donors = () => {
             columns={columns}
             actions={getActions}
             searchable={false}
+            paginationColor="red"
           />
         )}
       </motion.div>

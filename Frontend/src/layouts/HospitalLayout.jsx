@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { LayoutDashboard, Droplet, Settings, LogOut } from 'lucide-react'
 import { logout } from '@/store/slices/authSlice'
 import { Button } from '@/components/ui/Button'
-import Footer from './Footer'
+// import Footer from './Footer'
 import { toast } from 'react-toastify'
 
 const HospitalLayout = () => {
@@ -41,16 +41,20 @@ const HospitalLayout = () => {
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
           <span className="font-bold text-blue-800 text-xl tracking-wide">
-            BLOODBRIDGE - Hospital Dashboard
+            BLOODBRIDGE
           </span>
         </div>
-        <Button
+        <div className="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
+          <span className="font-semibold text-secondary">{user?.name || 'User'}</span>
+          <Button
           size="sm"
-          className="bg-white text-blue-800 hover:bg-[#E0F2FF] flex items-center gap-2 shadow-md"
+          className="bg-[#0EA5E9] hover:bg-[#0284C7] flex items-center gap-2 shadow-md"
           onClick={handleLogout}
         >
           Logout <LogOut className="w-4 h-4" />
         </Button>
+        </div>
+        
       </header>
 
       <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl">
@@ -84,7 +88,6 @@ const HospitalLayout = () => {
         </section>
       </div>
 
-      <Footer bgColor="bg-blue-800" />
     </div>
   )
 }

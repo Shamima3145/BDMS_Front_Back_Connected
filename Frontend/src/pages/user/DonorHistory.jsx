@@ -10,90 +10,7 @@ import { toast } from 'react-toastify'
 
 const DonorHistory = () => {
   const [filterYear, setFilterYear] = useState('all')
-
-  // Mock donation history data
-  const [donations] = useState([
-    {
-      id: 'D-001',
-      date: '2024-11-15',
-      location: 'Dhaka Medical College Hospital',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Emergency Patient',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-002',
-      date: '2024-09-20',
-      location: 'Red Crescent Blood Bank',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Surgery Patient',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-003',
-      date: '2024-07-10',
-      location: 'Chittagong Medical College',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Accident Victim',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-004',
-      date: '2024-05-05',
-      location: 'Dhaka Medical College Hospital',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Cancer Patient',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-005',
-      date: '2024-03-15',
-      location: 'Square Hospitals Blood Bank',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Thalassemia Patient',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-006',
-      date: '2024-01-20',
-      location: 'Bangabandhu Medical College',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Emergency Surgery',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-007',
-      date: '2023-11-10',
-      location: 'Apollo Hospitals Dhaka',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Maternity Case',
-      status: 'Completed',
-      certificate: true,
-    },
-    {
-      id: 'D-008',
-      date: '2023-09-05',
-      location: 'Dhaka Medical College Hospital',
-      bloodGroup: 'A+',
-      quantity: '450ml',
-      recipient: 'Accident Patient',
-      status: 'Completed',
-      certificate: true,
-    },
-  ])
+  const [donations] = useState([])
 
   const columns = [
     { key: 'id', label: 'Donation ID' },
@@ -308,6 +225,7 @@ const DonorHistory = () => {
               columns={columns}
               actions={getActions}
               searchable={false}
+              paginationColor="green"
             />
           </CardContent>
         </Card>

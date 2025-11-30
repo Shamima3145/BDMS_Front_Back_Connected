@@ -30,7 +30,8 @@ const Navbar = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className={`sticky top-0 z-50 transition-all bg-gradient-to-r from-[#FFFAEF] to-[#FFE8E8] ${
+      className={`sticky top-0 z-50 transition-all bg-gradient-to-r from-[#FFFAEF] via-[#fce9e9] to-[#FFFAEF]
+        ${
         isScrolled ? 'shadow-md' : ''
       }`}
     >
@@ -63,14 +64,14 @@ const Navbar = () => {
           </ul>
 
           {/* Search Bar */}
-          <div className="flex items-center bg-white rounded-3xl px-3 py-1.5 w-full md:w-48">
+          {/* <div className="flex items-center bg-white rounded-3xl px-3 py-1.5 w-full md:w-48">
             <Search className="text-primary w-4 h-4" />
             <Input
               type="text"
               placeholder="Search"
               className="bg-transparent focus:outline-none text-primary ml-2 w-full border-0 p-0 h-auto focus-visible:ring-0 text-sm"
             />
-          </div>
+          </div> */}
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-2">

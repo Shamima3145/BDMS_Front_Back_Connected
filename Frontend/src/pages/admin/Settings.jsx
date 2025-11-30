@@ -53,10 +53,6 @@ const Settings = () => {
     formState: { errors: errorsInfo },
   } = useForm({
     resolver: yupResolver(updateInfoSchema),
-    defaultValues: {
-      adminId: 'ADM001',
-      email: 'admin@example.com',
-    },
   })
 
   // Add Admin Form
@@ -82,9 +78,6 @@ const Settings = () => {
   const onUpdateInfo = async (data) => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('Update Info:', data)
       toast.success('Admin information updated successfully!')
     } catch (error) {
       toast.error('Failed to update information')
@@ -96,9 +89,6 @@ const Settings = () => {
   const onAddAdmin = async (data) => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('Add Admin:', data)
       toast.success('New admin added successfully!')
       resetAdmin()
     } catch (error) {
@@ -111,9 +101,6 @@ const Settings = () => {
   const onChangePassword = async (data) => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('Change Password:', data)
       toast.success('Password changed successfully!')
       resetPassword()
     } catch (error) {

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Hospital;
+use App\Models\BloodRequest;
 
 class UsersController extends Controller
 {
@@ -231,6 +232,125 @@ public function hospitalRegister(Request $request)
 
         return response()->json([
             'users' => $users,
+        ]);
+    }
+
+    // UPDATE HOSPITAL PROFILE
+    public function updateHospitalProfile(Request $request)
+    {
+        $hospital = $request->user();
+
+        $request->validate([
+            'hospitalName' => 'required|string|max:255',
+            'registrationId' => 'required|string|max:255',
+            'hospitalType' => 'required|string',
+            'yearEstablished' => 'required|integer',
+            'address' => 'required|string',
+            'city' => 'required|string',
+            'district' => 'required|string',
+            'email' => 'required|email|unique:hospitals,email,' . $hospital->id,
+            'contactNumber' => 'required|string',
+            'emergencyHotline' => 'nullable|string',
+            'hasBloodBank' => 'required|string',
+        ]);
+
+        $hospital->update([
+            'hospitalName' => $request->hospitalName,
+            'registrationId' => $request->registrationId,
+            'hospitalType' => $request->hospitalType,
+            'yearEstablished' => $request->yearEstablished,
+            'address' => $request->address,
+            'city' => $request->city,
+            'district' => $request->district,
+            'email' => $request->email,
+            'contactNumber' => $request->contactNumber,
+            'emergencyHotline' => $request->emergencyHotline,
+            'hasBloodBank' => $request->hasBloodBank,
+        ]);
+
+        return response()->json([
+            'message' => 'Hospital profile updated successfully',
+            'hospital' => $hospital,
+        ]);
+    }
+
+    // UPDATE HOSPITAL PASSWORD
+    public function updateHospitalPassword(Request $request)
+    {
+        $hospital = $request->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|max:12',
+        ]);
+
+        // Check if current password is correct
+        if (!Hash::check($request->current_password, $hospital->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect'
+            ], 401);
+        }
+
+        // Update password
+        $hospital->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return response()->json([
+            'message' => 'Password updated successfully',
+        ]);
+    }
+
+    // SUBMIT BLOOD REQUEST (for public and hospitals)
+    public function submitBloodRequest(Request $request)
+    {
+        $request->validate([
+            'patient_name' => 'nullable|string|max:255',
+            'hospital_name' => 'nullable|string|max:255',
+            'blood_group' => 'required|string',
+            'units' => 'required|integer|min:1',
+            'requested_by' => 'required|string|max:255',
+        ]);
+
+        // Generate unique request ID
+        $prefix = $request->patient_name ? 'BR' : 'HR';
+        $lastRequest = BloodRequest::where('request_id', 'like', $prefix . '-%')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastRequest) {
+            $lastNumber = (int) substr($lastRequest->request_id, strlen($prefix) + 1);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        $requestId = $prefix . '-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+
+        // Create blood request
+        $bloodRequest = BloodRequest::create([
+            'request_id' => $requestId,
+            'patient_name' => $request->patient_name,
+            'hospital_name' => $request->hospital_name,
+            'blood_group' => $request->blood_group,
+            'units' => $request->units,
+            'requested_by' => $request->requested_by,
+            'status' => 'Pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Blood request submitted successfully',
+            'request' => $bloodRequest,
+        ], 201);
+    }
+
+    // GET ALL BLOOD REQUESTS (for admin)
+    public function getAllBloodRequests()
+    {
+        $requests = BloodRequest::orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'requests' => $requests,
         ]);
     }
 

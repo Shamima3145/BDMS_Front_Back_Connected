@@ -1,10 +1,14 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee } from 'lucide-react'
+import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import TestimonialCard from '@/components/TestimonialCard'
+import BloodRequestModal from '@/components/BloodRequestModal'
+import { useState } from 'react'
 
 const LandingPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -143,16 +147,17 @@ const LandingPage = () => {
               chance at life. Be the reason someone smiles today.
             </h1>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-              <Link to="/login">
+              {/* <Link to="/login">
                 <Button className="bg-secondary px-5 py-2 rounded-3xl text-white hover:scale-110 transition-transform">
                   Donate Now
                 </Button>
-              </Link>
+              </Link> */}
               <Button
-                variant="outline"
-                className="border-2 border-primary px-5 py-2 rounded-3xl text-primary hover:scale-110 transition-transform"
+                onClick={() => setIsModalOpen(true)}
+                className="bg-[#D40200] hover:bg-[#942222] px-5 py-2 rounded-3xl text-white hover:scale-110 transition-transform flex items-center gap-2"
               >
-                Learn More
+                <HeartHandshake size={20} />
+                Request Blood
               </Button>
             </div>
           </motion.section>
@@ -275,6 +280,9 @@ const LandingPage = () => {
           ))}
         </div>
       </section>
+
+      {/* Blood Request Modal */}
+      <BloodRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }

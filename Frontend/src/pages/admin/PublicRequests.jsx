@@ -1,18 +1,44 @@
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import DataTable from '@/components/DataTable'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { useSelector } from 'react-redux'
 
 const PublicRequests = () => {
-  const publicRequestsData = [
-    { id: 'BR-001', patient: 'Maria Ahmed', blood: 'O+', units: 2, by: 'Public', status: 'Pending' },
-    { id: 'BR-002', patient: 'Aziz Rahman', blood: 'A-', units: 1, by: 'Public', status: 'Accepted' },
-    { id: 'BR-003', patient: 'Fatema Ali', blood: 'B+', units: 3, by: 'Public', status: 'Declined' },
-    { id: 'BR-004', patient: 'Khalid Khan', blood: 'AB+', units: 2, by: 'Public', status: 'Pending' },
-    { id: 'BR-005', patient: 'Samia Chowdhury', blood: 'O-', units: 2, by: 'Public', status: 'Pending' },
-    { id: 'BR-006', patient: 'Joyti Ghosh', blood: 'A+', units: 1, by: 'Public', status: 'Accepted' },
-    { id: 'BR-007', patient: 'Rashid Munna', blood: 'B-', units: 4, by: 'Public', status: 'Declined' },
-    { id: 'BR-008', patient: 'Lamia Tabassum', blood: 'AB-', units: 3, by: 'Public', status: 'Accepted' },
-  ]
+  const [publicRequestsData, setPublicRequestsData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const token = useSelector((state) => state.auth.token)
+
+  useEffect(() => {
+    const fetchPublicRequests = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/blood-requests', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const publicRequests = response.data.requests.filter(
+          (request) => request.patient_name !== null
+        )
+        const formattedData = publicRequests.map((request) => ({
+          id: request.request_id,
+          patient: request.patient_name,
+          blood: request.blood_group,
+          units: request.units,
+          by: request.requested_by,
+          status: request.status,
+        }))
+        setPublicRequestsData(formattedData)
+        setLoading(false)
+      } catch (error) {
+        toast.error('Failed to fetch public requests')
+        setLoading(false)
+      }
+    }
+
+    fetchPublicRequests()
+  }, [token])
 
   const columns = [
     { header: 'Request ID', accessor: 'id', className: 'font-semibold' },

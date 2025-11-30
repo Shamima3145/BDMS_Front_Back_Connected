@@ -20,7 +20,7 @@ const AdminDashboard = () => {
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
-      change: '+12%',
+      change: '',
     },
     {
       icon: Droplet,
@@ -29,7 +29,7 @@ const AdminDashboard = () => {
       color: 'from-red-500 to-red-600',
       bgColor: 'bg-red-50',
       iconColor: 'text-red-600',
-      change: '+8%',
+      change: '',
     },
     {
       icon: CheckCircle,
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
-      change: '+15%',
+      change: '',
     },
     {
       icon: Activity,
@@ -47,7 +47,7 @@ const AdminDashboard = () => {
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
-      change: '+10%',
+      change: '',
     },
   ]
 
@@ -118,122 +118,89 @@ const AdminDashboard = () => {
         </div>
       </motion.section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Blood Group Cards */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-2"
-        >
-          <Card className="shadow-lg border-0">
-            <CardHeader className="bg-gradient-to-r from-gray-50 to-white">
-              <CardTitle className="flex items-center gap-2">
-                <Droplet className="text-primary" size={24} />
-                Blood Inventory by Group
-              </CardTitle>
-              <CardDescription>Current stock levels for all blood groups</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-2 gap-6">
-                {bloodGroupData.map((data, index) => (
+      {/* Horizontal Pie Chart */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        <Card className="shadow-lg border-0">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-white">
+            <CardTitle className="text-lg">Blood Group Distribution</CardTitle>
+            <CardDescription>Blood group percentages</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Horizontal Pie Chart Layout */}
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+              {/* Pie Chart SVG */}
+              <div className="relative w-48 h-48 flex-shrink-0">
+                <svg viewBox="0 0 200 200">
+                  {pieChartData.map((item, index) => {
+                    let cumulativePercentage = 0
+                    for (let i = 0; i < index; i++) {
+                      cumulativePercentage += parseFloat(pieChartData[i].percentage)
+                    }
+                    const startAngle = (cumulativePercentage / 100) * 360
+                    const endAngle = ((cumulativePercentage + parseFloat(item.percentage)) / 100) * 360
+                    const largeArcFlag = item.percentage > 50 ? 1 : 0
+                    
+                    const startX = 100 + 90 * Math.cos((Math.PI * (startAngle - 90)) / 180)
+                    const startY = 100 + 90 * Math.sin((Math.PI * (startAngle - 90)) / 180)
+                    const endX = 100 + 90 * Math.cos((Math.PI * (endAngle - 90)) / 180)
+                    const endY = 100 + 90 * Math.sin((Math.PI * (endAngle - 90)) / 180)
+
+                    return (
+                      <motion.path
+                        key={item.bloodGroup}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                        d={`M 100 100 L ${startX} ${startY} A 90 90 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
+                        fill={item.color.bg}
+                        stroke="white"
+                        strokeWidth="2"
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                      />
+                    )
+                  })}
+                  <circle cx="100" cy="100" r="60" fill="white" />
+                  <text x="100" y="95" textAnchor="middle" className="text-2xl font-bold fill-gray-800">
+                    {totalUnits}
+                  </text>
+                  <text x="100" y="110" textAnchor="middle" className="text-xs fill-gray-500">
+                    Total Units
+                  </text>
+                </svg>
+              </div>
+
+              {/* Legend */}
+              <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+                {pieChartData.map((item, index) => (
                   <motion.div
-                    key={data.bloodGroup}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
+                    key={item.bloodGroup}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + index * 0.05 }}
+                    className="flex items-center justify-between text-sm p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
                   >
-                    <BloodGroupCard {...data} />
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: item.color.bg }}
+                      ></div>
+                      <span className="font-semibold text-gray-700">{item.bloodGroup}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-600">{item.units} units</span>
+                      <span className="text-gray-500 font-medium">{item.percentage}%</span>
+                    </div>
                   </motion.div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </motion.section>
-
-        {/* Pie Chart */}
-        <motion.section
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="shadow-lg border-0 h-full">
-            <CardHeader className="bg-gradient-to-r from-gray-50 to-white">
-              <CardTitle className="text-lg">Distribution</CardTitle>
-              <CardDescription>Blood group percentages</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              {/* Pie Chart SVG */}
-              <div className="flex flex-col items-center">
-                <div className="relative w-48 h-48 mb-6">
-                  <svg viewBox="0 0 200 200" className="transform -rotate-90">
-                    {pieChartData.map((item, index) => {
-                      let cumulativePercentage = 0
-                      for (let i = 0; i < index; i++) {
-                        cumulativePercentage += parseFloat(pieChartData[i].percentage)
-                      }
-                      const startAngle = (cumulativePercentage / 100) * 360
-                      const endAngle = ((cumulativePercentage + parseFloat(item.percentage)) / 100) * 360
-                      const largeArcFlag = item.percentage > 50 ? 1 : 0
-                      
-                      const startX = 100 + 90 * Math.cos((Math.PI * startAngle) / 180)
-                      const startY = 100 + 90 * Math.sin((Math.PI * startAngle) / 180)
-                      const endX = 100 + 90 * Math.cos((Math.PI * endAngle) / 180)
-                      const endY = 100 + 90 * Math.sin((Math.PI * endAngle) / 180)
-
-                      return (
-                        <motion.path
-                          key={item.bloodGroup}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                          d={`M 100 100 L ${startX} ${startY} A 90 90 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
-                          fill={item.color.bg}
-                          stroke="white"
-                          strokeWidth="2"
-                          className="hover:opacity-80 transition-opacity cursor-pointer"
-                        />
-                      )
-                    })}
-                    <circle cx="100" cy="100" r="60" fill="white" />
-                    <text x="100" y="95" textAnchor="middle" className="text-2xl font-bold fill-gray-800">
-                      {totalUnits}
-                    </text>
-                    <text x="100" y="110" textAnchor="middle" className="text-xs fill-gray-500">
-                      Total Units
-                    </text>
-                  </svg>
-                </div>
-
-                {/* Legend */}
-                <div className="w-full space-y-2">
-                  {pieChartData.map((item, index) => (
-                    <motion.div
-                      key={item.bloodGroup}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6 + index * 0.05 }}
-                      className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: item.color.bg }}
-                        ></div>
-                        <span className="font-semibold text-gray-700">{item.bloodGroup}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-gray-600">{item.units} units</span>
-                        <span className="text-gray-500 font-medium">{item.percentage}%</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.section>
-      </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.section>
     </div>
   )
 }

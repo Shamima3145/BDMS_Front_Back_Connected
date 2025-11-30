@@ -11,55 +11,7 @@ import { toast } from 'react-toastify'
 const HospitalRequests = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-
-  // Mock requests data
-  const [requests] = useState([
-    {
-      id: 'HR-2025-001',
-      patientName: 'Ahmed Hassan',
-      bloodGroup: 'O+',
-      units: 3,
-      urgency: 'Emergency',
-      requestDate: '2025-11-25',
-      status: 'Pending',
-    },
-    {
-      id: 'HR-2025-002',
-      patientName: 'Fatima Begum',
-      bloodGroup: 'A+',
-      units: 2,
-      urgency: 'Urgent',
-      requestDate: '2025-11-25',
-      status: 'Approved',
-    },
-    {
-      id: 'HR-2025-003',
-      patientName: 'Karim Rahman',
-      bloodGroup: 'AB+',
-      units: 4,
-      urgency: 'Normal',
-      requestDate: '2025-11-24',
-      status: 'Pending',
-    },
-    {
-      id: 'HR-2025-004',
-      patientName: 'Sara Ahmed',
-      bloodGroup: 'B+',
-      units: 5,
-      urgency: 'Emergency',
-      requestDate: '2025-11-24',
-      status: 'Rejected',
-    },
-    {
-      id: 'HR-2025-005',
-      patientName: 'Mohammad Ali',
-      bloodGroup: 'O-',
-      units: 2,
-      urgency: 'Urgent',
-      requestDate: '2025-11-23',
-      status: 'Approved',
-    },
-  ])
+  const [requests] = useState([])
 
   const stats = [
     {
@@ -131,7 +83,7 @@ const HospitalRequests = () => {
           label: <X size={16} />,
           onClick: () => handleReject(request),
           variant: 'outline',
-          className: 'bg-red-500 hover:bg-red-600 text-white',
+          className: 'bg-blue-500 hover:bg-blue-600 text-white',
         },
       ]
     }
@@ -200,7 +152,7 @@ const HospitalRequests = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="bg-[#FFFDF5] border border-[#FDE68A]">
+        <Card className="bg-white border border-[#BAE6FD]">
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -230,6 +182,7 @@ const HospitalRequests = () => {
               columns={columns}
               actions={getActions}
               searchable={false}
+              paginationColor="blue"
             />
           </CardContent>
         </Card>

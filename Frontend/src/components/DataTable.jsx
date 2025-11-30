@@ -47,7 +47,7 @@ const DataTable = ({
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Show</span>
           <Select
-            className="w-20"
+            className="w-20  border border-gray-300 hover:border-gray-400 rounded"
             value={entriesPerPage}
             onChange={handleEntriesChange}
           >
@@ -68,19 +68,19 @@ const DataTable = ({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
-                  className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
                 >
                   {col.header}
                 </th>
               ))}
               {showActions && (
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
                   Actions
                 </th>
               )}
@@ -88,7 +88,7 @@ const DataTable = ({
           </thead>
           <tbody>
             {visibleData.map((row, rowIdx) => (
-              <tr key={rowIdx} className="border-b hover:bg-gray-50">
+              <tr key={rowIdx} className="border-b border-gray-200 hover:bg-gray-50">
                 {columns.map((col, colIdx) => (
                   <td key={colIdx} className="py-3 px-6">
                     {col.accessor === 'status' ? (
@@ -156,6 +156,7 @@ const DataTable = ({
               size="sm"
               variant={currentPage === page ? 'default' : 'outline'}
               onClick={() => setCurrentPage(page)}
+              className={currentPage === page ? 'bg-gray-600 hover:bg-gray-700' : ''}
             >
               {page}
             </Button>
