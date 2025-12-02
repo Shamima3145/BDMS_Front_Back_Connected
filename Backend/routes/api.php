@@ -20,6 +20,8 @@ Route::post('/hospital-register', [UsersController::class, 'hospitalRegister'])-
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
+// STATS ROUTE
+Route::get('/stats', [UsersController::class, 'getStats']);
 
 // PROTECTED ROUTES
 Route::middleware('auth:sanctum')->group(function () {

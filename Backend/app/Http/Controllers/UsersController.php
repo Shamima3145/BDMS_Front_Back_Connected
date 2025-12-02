@@ -354,5 +354,23 @@ public function hospitalRegister(Request $request)
         ]);
     }
 
+    // GET STATS (public)
+    public function getStats()
+    {
+        $totalUsers = User::count();
+        $totalRequests = BloodRequest::count();
+        $approvedRequests = BloodRequest::where('status', 'Approved')->count();
+
+        // For now leave total units empty (null) as requested
+        $totalUnits = null;
+
+        return response()->json([
+            'total_users' => $totalUsers,
+            'total_requests' => $totalRequests,
+            'approved_requests' => $approvedRequests,
+            'total_units' => $totalUnits,
+        ]);
+    }
+
 }
 
