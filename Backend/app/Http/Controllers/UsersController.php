@@ -38,15 +38,14 @@ class UsersController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Create token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'message' => 'User registration successful',
-            'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'userType' => 'user',
+            'user' => [
+                'id' => $user->id,
+                'firstname' => $user->firstname,
+                'lastname' => $user->lastname,
+                'email' => $user->email,
+            ],
         ]);
     }
 
@@ -153,17 +152,57 @@ public function hospitalRegister(Request $request)
         'password' => \Hash::make($request->password),
     ]);
 
-    // Create token
-    $token = $hospital->createToken('auth_token')->plainTextToken;
-
     return response()->json([
         'message' => 'Hospital registration successful',
-        'user' => $hospital,
-        'access_token' => $token,
-        'token_type' => 'Bearer',
-        'userType' => 'hospital',
+        'hospital' => [
+            'id' => $hospital->id,
+            'hospitalName' => $hospital->hospitalName,
+            'email' => $hospital->email,
+        ],
     ]);
 }
+
+    // FORGOT PASSWORD FUNCTION
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|confirmed|min:6',
+        ]);
+
+        // Check if user exists in users table
+        $user = User::where('email', $request->email)->first();
+        
+        if ($user) {
+            // Update user password
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+            
+            return response()->json([
+                'message' => 'Password reset successful for user account',
+            ]);
+        }
+
+        // Check if user exists in hospitals table
+        $hospital = Hospital::where('email', $request->email)->first();
+        
+        if ($hospital) {
+            // Update hospital password
+            $hospital->update([
+                'password' => Hash::make($request->password),
+            ]);
+            
+            return response()->json([
+                'message' => 'Password reset successful for hospital account',
+            ]);
+        }
+
+        // If email not found in either table
+        return response()->json([
+            'message' => 'Email address not found in our records',
+        ], 404);
+    }
 
     // UPDATE USER PROFILE
     public function updateProfile(Request $request)

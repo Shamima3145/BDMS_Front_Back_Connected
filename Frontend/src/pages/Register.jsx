@@ -49,25 +49,10 @@ const Register = () => {
 
       const response = res.data
 
-      // Save token & user info in Redux
-      dispatch(
-        setCredentials({
-          token: response.access_token,
-          user: response.user,
-          userType: response.userType,
-        })
-      )
-
-      // Save in localStorage
-      localStorage.setItem('token', response.access_token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-      localStorage.setItem('userType', response.userType)
-
-      toast.success('Registration successful!')
-
-      // Redirect based on role
-      if (response.userType === 'admin') navigate('/admin/dashboard')
-      else navigate('/user/dashboard')
+      toast.success('Registration successful! Please login to continue.')
+      
+      // Redirect to login page instead of dashboard
+      navigate('/login')
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed. Please try again.')
     }

@@ -17,6 +17,9 @@ Route::post('/login', [UsersController::class, 'login'])->name('login');
 Route::post('/register', [UsersController::class, 'register'])->name('register');
 Route::post('/hospital-register', [UsersController::class, 'hospitalRegister'])->name('hospital.register');
 
+// FORGOT PASSWORD ROUTE
+Route::post('/forgot-password', [UsersController::class, 'forgotPassword'])->name('forgot.password');
+
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);

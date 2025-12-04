@@ -37,6 +37,24 @@ export const registerSchema = yup.object({
   lastDonationDate: yup.string().nullable(),
 })
 
+export const forgotPasswordSchema = yup.object({
+  email: yup
+    .string()
+    .email('Invalid email address')
+    .required('Email is required'),
+  password: yup
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(12, 'Password must not exceed 12 characters')
+    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .required('New password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'Passwords must match')
+    .required('Confirm password is required'),
+})
+
 export const hospitalRegisterSchema = yup.object({
   hospitalName: yup.string().required('Hospital name is required'),
   registrationId: yup.string().required('Registration ID is required'),

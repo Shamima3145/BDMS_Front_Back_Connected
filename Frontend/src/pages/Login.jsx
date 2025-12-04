@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Link, useNavigate } from 'react-router-dom'
@@ -10,11 +11,13 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import ForgotPasswordModal from '@/components/ForgotPasswordModal'
 import axios from 'axios'
 
 const Login = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
 
   const {
     register,
@@ -92,9 +95,13 @@ const Login = () => {
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
               </div>
 
-              <Link to="#" className="text-sm text-blue-500 hover:underline block text-right">
+              <button
+                type="button"
+                onClick={() => setIsForgotPasswordOpen(true)}
+                className="text-sm text-blue-500 hover:underline block text-right cursor-pointer"
+              >
                 Forgot password?
-              </Link>
+              </button>
 
               <Button type="submit" className="w-full bg-[#a21c1c] hover:bg-[#8c1717]" disabled={isSubmitting}>
                 {isSubmitting ? 'Logging in...' : 'Login'}
@@ -110,6 +117,11 @@ const Login = () => {
           </CardContent>
         </Card>
       </motion.div>
+      
+      <ForgotPasswordModal 
+        isOpen={isForgotPasswordOpen} 
+        onClose={() => setIsForgotPasswordOpen(false)} 
+      />
     </div>
   )
 }
