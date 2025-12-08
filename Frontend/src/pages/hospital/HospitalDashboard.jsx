@@ -5,12 +5,40 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import UpdateInventoryModal from '@/components/UpdateInventoryModal'
 
 const HospitalDashboard = () => {
-  const user = useSelector((state) => state.auth.user)
   const token = useSelector((state) => state.auth.token)
   const [hospitalInfo, setHospitalInfo] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [bloodInventory, setBloodInventory] = useState([])
+
+  const fetchBloodInventory = async (hospitalName) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/hospital/blood-bank?hospital_name=${encodeURIComponent(hospitalName)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      const data = response.data.data
+      setBloodInventory([
+        { group: 'A+', units: data.a_positive || 0, color: 'bg-[#0EA5E9]' },
+        { group: 'A-', units: data.a_negative || 0, color: 'bg-[#1D4ED8]' },
+        { group: 'B+', units: data.b_positive || 0, color: 'bg-[#06B6D4]' },
+        { group: 'B-', units: data.b_negative || 0, color: 'bg-[#F59E0B]' },
+        { group: 'AB+', units: data.ab_positive || 0, color: 'bg-[#8B5CF6]' },
+        { group: 'AB-', units: data.ab_negative || 0, color: 'bg-[#DC2626]' },
+        { group: 'O+', units: data.o_positive || 0, color: 'bg-[#16A34A]' },
+        { group: 'O-', units: data.o_negative || 0, color: 'bg-[#4B5563]' },
+      ])
+    } catch (error) {
+      console.error('Error fetching blood inventory:', error)
+    }
+  }
 
   // Fetch hospital data from backend
   useEffect(() => {
@@ -22,6 +50,7 @@ const HospitalDashboard = () => {
           },
         })
         setHospitalInfo(response.data.hospital)
+        fetchBloodInventory(response.data.hospital.hospitalName)
         setLoading(false)
       } catch (error) {
         toast.error('Failed to fetch hospital data')
@@ -30,19 +59,23 @@ const HospitalDashboard = () => {
     }
 
     fetchHospitalData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
-  // Blood inventory based on hospital data
-  const bloodInventory = hospitalInfo ? [
-    { group: 'A+', units: hospitalInfo.availableBloodGroups?.includes('A+') ? 10 : 0, color: 'bg-[#0EA5E9]' },
-    { group: 'A-', units: hospitalInfo.availableBloodGroups?.includes('A-') ? 4 : 0, color: 'bg-[#1D4ED8]' },
-    { group: 'B+', units: hospitalInfo.availableBloodGroups?.includes('B+') ? 8 : 0, color: 'bg-[#06B6D4]' },
-    { group: 'B-', units: hospitalInfo.availableBloodGroups?.includes('B-') ? 3 : 0, color: 'bg-[#F59E0B]' },
-    { group: 'AB+', units: hospitalInfo.availableBloodGroups?.includes('AB+') ? 6 : 0, color: 'bg-[#8B5CF6]' },
-    { group: 'AB-', units: hospitalInfo.availableBloodGroups?.includes('AB-') ? 2 : 0, color: 'bg-[#DC2626]' },
-    { group: 'O+', units: hospitalInfo.availableBloodGroups?.includes('O+') ? 12 : 0, color: 'bg-[#16A34A]' },
-    { group: 'O-', units: hospitalInfo.availableBloodGroups?.includes('O-') ? 5 : 0, color: 'bg-[#4B5563]' },
-  ] : []
+  const handleInventoryUpdate = (updatedInventory) => {
+    setBloodInventory([
+      { group: 'A+', units: updatedInventory.a_positive || 0, color: 'bg-[#0EA5E9]' },
+      { group: 'A-', units: updatedInventory.a_negative || 0, color: 'bg-[#1D4ED8]' },
+      { group: 'B+', units: updatedInventory.b_positive || 0, color: 'bg-[#06B6D4]' },
+      { group: 'B-', units: updatedInventory.b_negative || 0, color: 'bg-[#F59E63]' },
+      { group: 'AB+', units: updatedInventory.ab_positive || 0, color: 'bg-[#8B5CF6]' },
+      { group: 'AB-', units: updatedInventory.ab_negative || 0, color: 'bg-[#DC2626]' },
+      { group: 'O+', units: updatedInventory.o_positive || 0, color: 'bg-[#16A34A]' },
+      { group: 'O-', units: updatedInventory.o_negative || 0, color: 'bg-[#4B5563]' },
+    ])
+  }
+
+
 
   if (loading) {
     return (
@@ -123,7 +156,10 @@ const HospitalDashboard = () => {
                 <CardTitle className="text-xl text-[#0F172A] mb-1">Blood Bank Information</CardTitle>
                 <p className="text-sm text-gray-600">Available blood groups and stored units</p>
               </div>
-              <Button className="self-start md:self-center bg-[#0EA5E9] hover:bg-[#0284C7] text-xs font-semibold">
+              <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="self-start md:self-center bg-[#0EA5E9] hover:bg-[#0284C7] text-xs font-semibold"
+              >
                 Update Inventory
               </Button>
             </div>
@@ -153,6 +189,13 @@ const HospitalDashboard = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      <UpdateInventoryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        hospitalName={hospitalInfo?.hospitalName}
+        onUpdate={handleInventoryUpdate}
+      />
     </div>
   )
 }

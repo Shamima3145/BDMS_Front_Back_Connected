@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Hospital;
 use App\Models\BloodRequest;
+use App\Models\BloodBank;
 
 class UsersController extends Controller
 {
@@ -372,6 +373,98 @@ class UsersController extends Controller
             'total_requests' => BloodRequest::count(),
             'approved_requests' => BloodRequest::where('status','Approved')->count(),
             'total_units' => null
+        ]);
+    }
+
+    // UPDATE BLOOD BANK INVENTORY
+    public function updateBloodBank(Request $request)
+    {
+        $request->validate([
+            'hospital_name' => 'required|string',
+            'a_positive' => 'required|integer|min:0',
+            'a_negative' => 'required|integer|min:0',
+            'b_positive' => 'required|integer|min:0',
+            'b_negative' => 'required|integer|min:0',
+            'ab_positive' => 'required|integer|min:0',
+            'ab_negative' => 'required|integer|min:0',
+            'o_positive' => 'required|integer|min:0',
+            'o_negative' => 'required|integer|min:0',
+        ]);
+
+        $bloodBank = BloodBank::updateOrCreate(
+            ['hospital_name' => $request->hospital_name],
+            [
+                'a_positive' => $request->a_positive,
+                'a_negative' => $request->a_negative,
+                'b_positive' => $request->b_positive,
+                'b_negative' => $request->b_negative,
+                'ab_positive' => $request->ab_positive,
+                'ab_negative' => $request->ab_negative,
+                'o_positive' => $request->o_positive,
+                'o_negative' => $request->o_negative,
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Blood bank inventory updated successfully',
+            'data' => $bloodBank
+        ]);
+    }
+
+    // GET BLOOD BANK INVENTORY
+    public function getBloodBank(Request $request)
+    {
+        $hospitalName = $request->query('hospital_name');
+        
+        if (!$hospitalName) {
+            return response()->json(['message' => 'Hospital name is required'], 400);
+        }
+
+        $bloodBank = BloodBank::where('hospital_name', $hospitalName)->first();
+
+        if (!$bloodBank) {
+            return response()->json([
+                'data' => [
+                    'a_positive' => 0,
+                    'a_negative' => 0,
+                    'b_positive' => 0,
+                    'b_negative' => 0,
+                    'ab_positive' => 0,
+                    'ab_negative' => 0,
+                    'o_positive' => 0,
+                    'o_negative' => 0,
+                ]
+            ]);
+        }
+
+        return response()->json(['data' => $bloodBank]);
+    }
+
+    // GET TOTAL BLOOD INVENTORY FOR ADMIN
+    public function getTotalBloodInventory()
+    {
+        $totalInventory = BloodBank::selectRaw('
+            SUM(a_positive) as a_positive,
+            SUM(a_negative) as a_negative,
+            SUM(b_positive) as b_positive,
+            SUM(b_negative) as b_negative,
+            SUM(ab_positive) as ab_positive,
+            SUM(ab_negative) as ab_negative,
+            SUM(o_positive) as o_positive,
+            SUM(o_negative) as o_negative
+        ')->first();
+
+        return response()->json([
+            'data' => [
+                'A+' => (int)$totalInventory->a_positive ?? 0,
+                'A-' => (int)$totalInventory->a_negative ?? 0,
+                'B+' => (int)$totalInventory->b_positive ?? 0,
+                'B-' => (int)$totalInventory->b_negative ?? 0,
+                'AB+' => (int)$totalInventory->ab_positive ?? 0,
+                'AB-' => (int)$totalInventory->ab_negative ?? 0,
+                'O+' => (int)$totalInventory->o_positive ?? 0,
+                'O-' => (int)$totalInventory->o_negative ?? 0,
+            ]
         ]);
     }
 }

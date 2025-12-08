@@ -22,11 +22,17 @@ Route::post('/forgot-password', [UsersController::class, 'forgotPassword'])->nam
 
 // Admin Routes (accessible with static token)
 Route::get('/admin/users', [UsersController::class, 'getAllUsers']);
+Route::get('/admin/blood-inventory', [UsersController::class, 'getTotalBloodInventory']);
 
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
 Route::get('/hospital/blood-requests', [UsersController::class, 'getHospitalBloodRequests']);
+
+// BLOOD BANK ROUTES
+Route::post('/hospital/blood-bank', [UsersController::class, 'updateBloodBank']);
+Route::get('/hospital/blood-bank', [UsersController::class, 'getBloodBank']);
+
 // STATS ROUTE
 Route::get('/stats', [UsersController::class, 'getStats']);
 

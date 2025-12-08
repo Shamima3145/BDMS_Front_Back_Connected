@@ -1,10 +1,43 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useSelector } from 'react-redux'
 import { TrendingUp, TrendingDown, Activity, Droplet } from 'lucide-react'
 import BloodGroupCard from '@/components/BloodGroupCard'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const BloodInventory = () => {
-  const inventory = useSelector((state) => state.inventory.bloodGroups)
+  const [inventory, setInventory] = useState({
+    'A+': 0,
+    'A-': 0,
+    'B+': 0,
+    'B-': 0,
+    'AB+': 0,
+    'AB-': 0,
+    'O+': 0,
+    'O-': 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBloodInventory()
+  }, [])
+
+  const fetchBloodInventory = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://127.0.0.1:8000/api/admin/blood-inventory', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setInventory(response.data.data)
+    } catch (error) {
+      console.error('Error fetching blood inventory:', error)
+      toast.error('Failed to fetch blood inventory')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const bloodGroupData = Object.entries(inventory).map(([group, units]) => ({
     bloodGroup: group,
@@ -34,17 +67,23 @@ const BloodInventory = () => {
         </div>
       </motion.div>
 
-      {/* Blood Group Cards Grid */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-6"
-      >
-        {bloodGroupData.map((data, index) => (
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading blood inventory...</p>
+        </div>
+      ) : (
+        <>
+          {/* Blood Group Cards Grid */}
           <motion.div
-            key={data.bloodGroup}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+          >
+            {bloodGroupData.map((data, index) => (
+              <motion.div
+                key={data.bloodGroup}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05, type: 'spring', stiffness: 100 }}
             whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
@@ -117,6 +156,8 @@ const BloodInventory = () => {
           </motion.div>
         </div>
       </motion.div>
+        </>
+      )}
     </div>
   )
 }
