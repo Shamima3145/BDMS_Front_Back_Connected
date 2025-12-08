@@ -5,7 +5,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'], // React app URLs
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',   // 🔥 IMPORTANT
+        'http://127.0.0.1:3000',   // optional
+        'http://127.0.0.1:3001',   // optional
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -15,5 +22,5 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true, // only if using cookies/sanctum
+    'supports_credentials' => true,
 ];

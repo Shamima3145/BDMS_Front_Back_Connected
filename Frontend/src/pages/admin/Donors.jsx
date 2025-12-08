@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Phone, Mail, Calendar, Droplet, User, MapPin, Filter, Download } from 'lucide-react'
-import { useSelector } from 'react-redux'
 import axios from 'axios'
 import DataTable from '@components/DataTable'
 import { Button } from '@components/ui/Button'
 import { Input } from '@components/ui/Input'
 import { Select } from '@components/ui/Select'
 import { bloodGroups } from '@utils/constants'
-import { formatDate } from '@utils/helpers'
 import { toast } from 'react-toastify'
 
 const Donors = () => {
@@ -17,21 +15,24 @@ const Donors = () => {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [donors, setDonors] = useState([])
   const [loading, setLoading] = useState(true)
-  const token = useSelector((state) => state.auth.token)
+
+  // Use token from localStorage (saved after login)
+  const token = localStorage.getItem('token')
 
   // Fetch donors from backend
   useEffect(() => {
     const fetchDonors = async () => {
+      if (!token) return
+
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/admin/users', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
         setDonors(response.data.users)
         setLoading(false)
       } catch (error) {
-        toast.error('Failed to fetch donors')
+        console.error(error)
+        toast.error('Failed to fetch donors. Please check your login.')
         setLoading(false)
       }
     }
@@ -40,35 +41,25 @@ const Donors = () => {
   }, [token])
 
   const columns = [
-    { key: 'id', label: 'Donor ID' },
-    { 
-      key: 'name', 
-      label: 'Name',
-      render: (row) => `${row.firstname} ${row.lastname}`
-    },
-    { 
-      key: 'bloodgroup', 
-      label: 'Blood Group'
-    },
-    { 
-      key: 'contactNumber', 
-      label: 'Contact'
-    },
-    { key: 'area', label: 'Location' },
-    { 
-      key: 'lastDonationDate', 
-      label: 'Last Donation',
-      render: (row) => row.lastDonationDate ? new Date(row.lastDonationDate).toLocaleDateString() : 'Never'
-    },
-    { key: 'gender', label: 'Gender' },
+    { header: 'Donor ID', accessor: 'id' },
+    { header: 'First Name', accessor: 'firstname' },
+    { header: 'Last Name', accessor: 'lastname' },
+    { header: 'Blood Group', accessor: 'bloodgroup', className: 'font-extrabold text-red-600' },
+    { header: 'Contact', accessor: 'contactNumber' },
+    { header: 'Location', accessor: 'area' },
+    { header: 'Gender', accessor: 'gender' },
   ]
 
   const handleContact = (donor) => {
     toast.info(`Contacting ${donor.firstname} ${donor.lastname} at ${donor.contactNumber}`)
   }
 
-  const handleViewDetails = (donor) => {
-    toast.info(`Viewing details for ${donor.firstname} ${donor.lastname}`)
+  const handleSendSMS = (donor) => {
+    toast.success(`SMS sent to ${donor.firstname} ${donor.lastname} at ${donor.contactNumber}`)
+  }
+
+  const handleSendEmail = (donor) => {
+    toast.success(`Email sent to ${donor.firstname} ${donor.lastname} at ${donor.email}`)
   }
 
   const handleExport = () => {
@@ -76,62 +67,76 @@ const Donors = () => {
   }
 
   const getActions = (donor) => [
-    {
-      label: 'View Details',
-      onClick: () => handleViewDetails(donor),
-      variant: 'default',
+    { 
+      label: 'Send SMS', 
+      onClick: () => handleSendSMS(donor), 
+      className: 'bg-blue-500 hover:bg-blue-600 text-white'
     },
-    {
-      label: 'Contact',
-      onClick: () => handleContact(donor),
-      variant: 'outline',
+    { 
+      label: 'Send Email', 
+      onClick: () => handleSendEmail(donor), 
+      className: 'bg-green-500 hover:bg-green-600 text-white'
     },
   ]
 
   // Filter donors
   const filteredDonors = donors.filter((donor) => {
     const fullName = `${donor.firstname} ${donor.lastname}`.toLowerCase()
-    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
-                         donor.contactNumber?.includes(searchQuery) ||
-                         donor.area?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         donor.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesBloodGroup = selectedBloodGroup === 'all' || donor.bloodgroup === selectedBloodGroup
-    
-    // Calculate eligibility (at least 4 months since last donation)
+
+    const matchesSearch =
+      fullName.includes(searchQuery.toLowerCase()) ||
+      donor.contactNumber?.includes(searchQuery) ||
+      donor.area?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      donor.email?.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesBloodGroup =
+      selectedBloodGroup === 'all' || donor.bloodgroup === selectedBloodGroup
+
     const isEligible = () => {
       if (!donor.lastDonationDate) return true
-      const lastDonation = new Date(donor.lastDonationDate)
+      const last = new Date(donor.lastDonationDate)
       const today = new Date()
-      const monthsDiff = (today - lastDonation) / (1000 * 60 * 60 * 24 * 30)
-      return monthsDiff >= 4
+      const months = (today - last) / (1000 * 60 * 60 * 24 * 30)
+      return months >= 4
     }
-    
+
     const status = isEligible() ? 'active' : 'inactive'
-    const matchesStatus = selectedStatus === 'all' || status === selectedStatus.toLowerCase()
-    
+    const matchesStatus =
+      selectedStatus === 'all' || selectedStatus.toLowerCase() === status
+
     return matchesSearch && matchesBloodGroup && matchesStatus
+  }).map((donor) => {
+    const isEligible = !donor.lastDonationDate || 
+      (new Date() - new Date(donor.lastDonationDate)) / (1000 * 60 * 60 * 24 * 30) >= 4
+    
+    return {
+      ...donor,
+      eligibilityStatus: isEligible ? '✓ Eligible' : 'Not Eligible',
+      isEligible
+    }
   })
 
   const stats = [
     { label: 'Total Donors', value: donors.length, icon: User, color: 'bg-blue-500' },
-    { 
-      label: 'Eligible Now', 
-      value: donors.filter(d => {
+    {
+      label: 'Eligible Now',
+      value: donors.filter((d) => {
         if (!d.lastDonationDate) return true
-        const lastDonation = new Date(d.lastDonationDate)
+        const last = new Date(d.lastDonationDate)
         const today = new Date()
-        const monthsDiff = (today - lastDonation) / (1000 * 60 * 60 * 24 * 30)
-        return monthsDiff >= 4
-      }).length, 
-      icon: Calendar, 
-      color: 'bg-green-500' 
+        const months = (today - last) / (1000 * 60 * 60 * 24 * 30)
+        return months >= 4
+      }).length,
+      icon: Calendar,
+      color: 'bg-green-500',
     },
-    { label: 'Blood Groups', value: new Set(donors.map(d => d.bloodgroup)).size, icon: Filter, color: 'bg-red-500' },
+    { label: 'Blood Groups', value: new Set(donors.map((d) => d.bloodgroup)).size, icon: Filter, color: 'bg-red-500' },
     { label: 'Total Registered', value: donors.length, icon: Droplet, color: 'bg-purple-500' },
   ]
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -144,7 +149,7 @@ const Donors = () => {
         </Button>
       </motion.div>
 
-      {/* Statistics Cards */}
+      {/* Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -184,9 +189,7 @@ const Donors = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Donors
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search Donors</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <Input
@@ -200,30 +203,18 @@ const Donors = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blood Group
-            </label>
-            <Select
-              value={selectedBloodGroup}
-              onChange={(e) => setSelectedBloodGroup(e.target.value)}
-            >
+            <label className="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
+            <Select value={selectedBloodGroup} onChange={(e) => setSelectedBloodGroup(e.target.value)}>
               <option value="all">All Blood Groups</option>
               {bloodGroups.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
+                <option key={group} value={group}>{group}</option>
               ))}
             </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <Select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <Select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -250,7 +241,7 @@ const Donors = () => {
           <DataTable
             data={filteredDonors}
             columns={columns}
-            actions={getActions}
+            customActions={getActions}
             searchable={false}
             paginationColor="red"
           />

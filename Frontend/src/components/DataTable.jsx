@@ -10,6 +10,7 @@ const DataTable = ({
   onAccept,
   onDecline,
   showActions = false,
+  customActions,
   entriesPerPage = 5,
   onEntriesChange,
   onSearch,
@@ -43,30 +44,6 @@ const DataTable = ({
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Show</span>
-          <Select
-            className="w-20  border border-gray-300 hover:border-gray-400 rounded"
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </Select>
-          <span className="text-sm text-gray-600">entries</span>
-        </div>
-        <Input
-          type="text"
-          placeholder={searchPlaceholder}
-          value={searchQuery}
-          onChange={handleSearch}
-          className="w-64"
-        />
-      </div>
-
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
           <thead className="bg-gray-50">
@@ -79,7 +56,7 @@ const DataTable = ({
                   {col.header}
                 </th>
               ))}
-              {showActions && (
+              {(showActions || customActions) && (
                 <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
                   Actions
                 </th>
@@ -96,6 +73,16 @@ const DataTable = ({
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(
                           row[col.accessor]
                         )}`}
+                      >
+                        {row[col.accessor]}
+                      </span>
+                    ) : col.accessor === 'eligibilityStatus' ? (
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          row[col.accessor]?.includes('✓')
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
                       >
                         {row[col.accessor]}
                       </span>
@@ -129,6 +116,22 @@ const DataTable = ({
                     </Button>
                   </td>
                 )}
+                {customActions && (
+                  <td className="py-3 px-6">
+                    <div className="flex flex-col gap-2">
+                      {customActions(row).map((action, idx) => (
+                        <Button
+                          key={idx}
+                          size="sm"
+                          onClick={action.onClick}
+                          className={action.className || ''}
+                        >
+                          {action.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -136,11 +139,27 @@ const DataTable = ({
       </div>
 
       <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-gray-600">
-          Showing {startIndex + 1} to{' '}
-          {Math.min(startIndex + entriesPerPage, filteredData.length)} of{' '}
-          {filteredData.length} entries
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-gray-600">
+            Showing {startIndex + 1} to{' '}
+            {Math.min(startIndex + entriesPerPage, filteredData.length)} of{' '}
+            {filteredData.length} entries
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Show</span>
+            <Select
+              className="w-20  border border-gray-300 hover:border-gray-400 rounded"
+              value={entriesPerPage}
+              onChange={handleEntriesChange}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </Select>
+            <span className="text-sm text-gray-600">entries</span>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button
             size="sm"

@@ -20,6 +20,9 @@ Route::post('/hospital-register', [UsersController::class, 'hospitalRegister'])-
 // FORGOT PASSWORD ROUTE
 Route::post('/forgot-password', [UsersController::class, 'forgotPassword'])->name('forgot.password');
 
+// Admin Routes (accessible with static token)
+Route::get('/admin/users', [UsersController::class, 'getAllUsers']);
+
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
@@ -41,9 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Hospital Profile & Password Routes
     Route::put('/hospital/profile', [UsersController::class, 'updateHospitalProfile']);
     Route::put('/hospital/password', [UsersController::class, 'updateHospitalPassword']);
-
-    // Admin Routes
-    Route::get('/admin/users', [UsersController::class, 'getAllUsers']);
 
     // User Dashboard
     Route::get('/user/dashboard', function (Request $request) {

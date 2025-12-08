@@ -25,7 +25,6 @@ class UsersController extends Controller
             'password' => 'required|string|confirmed|min:6',
         ]);
 
-        // Create user
         $user = User::create([
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
@@ -49,7 +48,7 @@ class UsersController extends Controller
         ]);
     }
 
-    // LOGIN FUNCTION (works for users & hospitals & admin)
+    // LOGIN FUNCTION (for users, hospitals, and admin)
     public function login(Request $request)
     {
         $request->validate([
@@ -57,44 +56,54 @@ class UsersController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Check for admin static login (case-insensitive email)
         $email = strtolower(trim($request->email));
         $password = $request->password;
-        
+
+        // Admin static login
         if ($email === 'admin@bloodbridge.com' && $password === 'admin123') {
+            $admin = (object)[
+                'id' => 1,
+                'firstname' => 'Admin',
+                'lastname' => '',
+                'email' => 'admin@bloodbridge.com',
+                'role' => 'admin'
+            ];
+
+            $token = 'admin_static_token_' . time();
+
             return response()->json([
                 'message' => 'Login successful',
-                'access_token' => 'static_admin_token_' . time(),
+                'access_token' => $token,
                 'token_type' => 'Bearer',
                 'userType' => 'admin',
                 'user' => [
-                    'id' => 1,
-                    'name' => 'Admin',
-                    'firstname' => 'Admin',
-                    'email' => 'admin@bloodbridge.com',
+                    'id' => $admin->id,
+                    'name' => $admin->firstname,
+                    'firstname' => $admin->firstname,
+                    'lastname' => $admin->lastname,
+                    'email' => $admin->email,
+                    'role' => 'admin'
                 ],
             ]);
         }
 
-        // Try finding user first
+        // Try finding user
         $user = User::where('email', $request->email)->first();
         $userType = 'user';
 
-        // If no user found, try hospital
+        // If not found, try hospital
         if (!$user) {
             $user = Hospital::where('email', $request->email)->first();
             $userType = 'hospital';
         }
 
-        // If still not found or password wrong
+        // Check credentials
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Create API token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Return response
         return response()->json([
             'message' => 'Login successful',
             'access_token' => $token,
@@ -116,53 +125,52 @@ class UsersController extends Controller
         ]);
     }
 
-    // HOSPITAL REGISTER FUNCTION
-public function hospitalRegister(Request $request)
-{
-    $request->validate([
-        'hospitalName' => 'required|string|max:255',
-        'registrationId' => 'required|string|max:255|unique:hospitals,registrationId',
-        'hospitalType' => 'required|string',
-        'yearEstablished' => 'required|integer',
-        'address' => 'required|string',
-        'city' => 'required|string',
-        'district' => 'required|string',
-        'email' => 'required|email|unique:hospitals,email',
-        'contactNumber' => 'required|string',
-        'emergencyHotline' => 'nullable|string',
-        'hasBloodBank' => 'required|string|in:yes,no',
-        'availableBloodGroups' => 'nullable|array',
-        'password' => 'required|string|confirmed',
-    ]);
+    // HOSPITAL REGISTER
+    public function hospitalRegister(Request $request)
+    {
+        $request->validate([
+            'hospitalName' => 'required|string|max:255',
+            'registrationId' => 'required|string|max:255|unique:hospitals,registrationId',
+            'hospitalType' => 'required|string',
+            'yearEstablished' => 'required|integer',
+            'address' => 'required|string',
+            'city' => 'required|string',
+            'district' => 'required|string',
+            'email' => 'required|email|unique:hospitals,email',
+            'contactNumber' => 'required|string',
+            'emergencyHotline' => 'nullable|string',
+            'hasBloodBank' => 'required|string|in:yes,no',
+            'availableBloodGroups' => 'nullable|array',
+            'password' => 'required|string|confirmed',
+        ]);
 
-    // Create hospital
-    $hospital = Hospital::create([
-        'hospitalName' => $request->hospitalName,
-        'registrationId' => $request->registrationId,
-        'hospitalType' => $request->hospitalType,
-        'yearEstablished' => $request->yearEstablished,
-        'address' => $request->address,
-        'city' => $request->city,
-        'district' => $request->district,
-        'email' => $request->email,
-        'contactNumber' => $request->contactNumber,
-        'emergencyHotline' => $request->emergencyHotline,
-        'hasBloodBank' => $request->hasBloodBank,
-        'availableBloodGroups' => $request->availableBloodGroups ?? [],
-        'password' => \Hash::make($request->password),
-    ]);
+        $hospital = Hospital::create([
+            'hospitalName' => $request->hospitalName,
+            'registrationId' => $request->registrationId,
+            'hospitalType' => $request->hospitalType,
+            'yearEstablished' => $request->yearEstablished,
+            'address' => $request->address,
+            'city' => $request->city,
+            'district' => $request->district,
+            'email' => $request->email,
+            'contactNumber' => $request->contactNumber,
+            'emergencyHotline' => $request->emergencyHotline,
+            'hasBloodBank' => $request->hasBloodBank,
+            'availableBloodGroups' => $request->availableBloodGroups ?? [],
+            'password' => Hash::make($request->password),
+        ]);
 
-    return response()->json([
-        'message' => 'Hospital registration successful',
-        'hospital' => [
-            'id' => $hospital->id,
-            'hospitalName' => $hospital->hospitalName,
-            'email' => $hospital->email,
-        ],
-    ]);
-}
+        return response()->json([
+            'message' => 'Hospital registration successful',
+            'hospital' => [
+                'id' => $hospital->id,
+                'hospitalName' => $hospital->hospitalName,
+                'email' => $hospital->email,
+            ],
+        ]);
+    }
 
-    // FORGOT PASSWORD FUNCTION
+    // FORGOT PASSWORD
     public function forgotPassword(Request $request)
     {
         $request->validate([
@@ -170,38 +178,19 @@ public function hospitalRegister(Request $request)
             'password' => 'required|string|confirmed|min:6',
         ]);
 
-        // Check if user exists in users table
         $user = User::where('email', $request->email)->first();
-        
         if ($user) {
-            // Update user password
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
-            
-            return response()->json([
-                'message' => 'Password reset successful for user account',
-            ]);
+            $user->update(['password' => Hash::make($request->password)]);
+            return response()->json(['message' => 'Password reset successful for user account']);
         }
 
-        // Check if user exists in hospitals table
         $hospital = Hospital::where('email', $request->email)->first();
-        
         if ($hospital) {
-            // Update hospital password
-            $hospital->update([
-                'password' => Hash::make($request->password),
-            ]);
-            
-            return response()->json([
-                'message' => 'Password reset successful for hospital account',
-            ]);
+            $hospital->update(['password' => Hash::make($request->password)]);
+            return response()->json(['message' => 'Password reset successful for hospital account']);
         }
 
-        // If email not found in either table
-        return response()->json([
-            'message' => 'Email address not found in our records',
-        ], 404);
+        return response()->json(['message' => 'Email address not found'], 404);
     }
 
     // UPDATE USER PROFILE
@@ -229,49 +218,45 @@ public function hospitalRegister(Request $request)
             'email' => $request->email,
         ]);
 
-        return response()->json([
-            'message' => 'Profile updated successfully',
-            'user' => $user,
-        ]);
+        return response()->json(['message' => 'Profile updated successfully', 'user' => $user]);
     }
 
     // UPDATE USER PASSWORD
     public function updatePassword(Request $request)
     {
         $user = $request->user();
-
         $request->validate([
             'current_password' => 'required|string',
             'new_password' => 'required|string|min:8|max:12',
         ]);
 
-        // Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'message' => 'Current password is incorrect'
-            ], 401);
+            return response()->json(['message' => 'Current password is incorrect'], 401);
         }
 
-        // Update password
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
-
-        return response()->json([
-            'message' => 'Password updated successfully',
-        ]);
+        $user->update(['password' => Hash::make($request->new_password)]);
+        return response()->json(['message' => 'Password updated successfully']);
     }
 
-    // GET ALL USERS (for admin)
-    public function getAllUsers()
+    // GET ALL USERS (admin)
+    public function getAllUsers(Request $request)
     {
+        // Check for admin static token
+        $token = $request->bearerToken();
+        if ($token && strpos($token, 'admin_static_token_') === 0) {
+            $users = User::select('id', 'firstname', 'lastname', 'bloodgroup', 'gender', 'email', 'contactNumber', 'area', 'lastDonationDate', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json(['users' => $users]);
+        }
+
+        // For regular authenticated users (if needed)
         $users = User::select('id', 'firstname', 'lastname', 'bloodgroup', 'gender', 'email', 'contactNumber', 'area', 'lastDonationDate', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'users' => $users,
-        ]);
+        return response()->json(['users' => $users]);
     }
 
     // UPDATE HOSPITAL PROFILE
@@ -293,54 +278,31 @@ public function hospitalRegister(Request $request)
             'hasBloodBank' => 'required|string',
         ]);
 
-        $hospital->update([
-            'hospitalName' => $request->hospitalName,
-            'registrationId' => $request->registrationId,
-            'hospitalType' => $request->hospitalType,
-            'yearEstablished' => $request->yearEstablished,
-            'address' => $request->address,
-            'city' => $request->city,
-            'district' => $request->district,
-            'email' => $request->email,
-            'contactNumber' => $request->contactNumber,
-            'emergencyHotline' => $request->emergencyHotline,
-            'hasBloodBank' => $request->hasBloodBank,
-        ]);
+        $hospital->update($request->only([
+            'hospitalName','registrationId','hospitalType','yearEstablished','address','city','district','email','contactNumber','emergencyHotline','hasBloodBank'
+        ]));
 
-        return response()->json([
-            'message' => 'Hospital profile updated successfully',
-            'hospital' => $hospital,
-        ]);
+        return response()->json(['message' => 'Hospital profile updated successfully','hospital' => $hospital]);
     }
 
     // UPDATE HOSPITAL PASSWORD
     public function updateHospitalPassword(Request $request)
     {
         $hospital = $request->user();
-
         $request->validate([
             'current_password' => 'required|string',
             'new_password' => 'required|string|min:8|max:12',
         ]);
 
-        // Check if current password is correct
         if (!Hash::check($request->current_password, $hospital->password)) {
-            return response()->json([
-                'message' => 'Current password is incorrect'
-            ], 401);
+            return response()->json(['message' => 'Current password is incorrect'], 401);
         }
 
-        // Update password
-        $hospital->update([
-            'password' => Hash::make($request->new_password),
-        ]);
-
-        return response()->json([
-            'message' => 'Password updated successfully',
-        ]);
+        $hospital->update(['password' => Hash::make($request->new_password)]);
+        return response()->json(['message' => 'Password updated successfully']);
     }
 
-    // SUBMIT BLOOD REQUEST (for public and hospitals)
+    // SUBMIT BLOOD REQUEST
     public function submitBloodRequest(Request $request)
     {
         $request->validate([
@@ -351,22 +313,11 @@ public function hospitalRegister(Request $request)
             'requested_by' => 'required|string|max:255',
         ]);
 
-        // Generate unique request ID
         $prefix = $request->patient_name ? 'BR' : 'HR';
-        $lastRequest = BloodRequest::where('request_id', 'like', $prefix . '-%')
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        if ($lastRequest) {
-            $lastNumber = (int) substr($lastRequest->request_id, strlen($prefix) + 1);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-        
-        $requestId = $prefix . '-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        $lastRequest = BloodRequest::where('request_id', 'like', $prefix.'-%')->orderBy('id','desc')->first();
+        $newNumber = $lastRequest ? ((int)substr($lastRequest->request_id, strlen($prefix)+1)+1) : 1;
+        $requestId = $prefix.'-'.str_pad($newNumber, 3, '0', STR_PAD_LEFT);
 
-        // Create blood request
         $bloodRequest = BloodRequest::create([
             'request_id' => $requestId,
             'patient_name' => $request->patient_name,
@@ -377,39 +328,24 @@ public function hospitalRegister(Request $request)
             'status' => 'Pending',
         ]);
 
-        return response()->json([
-            'message' => 'Blood request submitted successfully',
-            'request' => $bloodRequest,
-        ], 201);
+        return response()->json(['message' => 'Blood request submitted successfully', 'request' => $bloodRequest], 201);
     }
 
-    // GET ALL BLOOD REQUESTS (for admin)
+    // GET ALL BLOOD REQUESTS
     public function getAllBloodRequests()
     {
-        $requests = BloodRequest::orderBy('created_at', 'desc')->get();
-
-        return response()->json([
-            'requests' => $requests,
-        ]);
+        $requests = BloodRequest::orderBy('created_at','desc')->get();
+        return response()->json(['requests' => $requests]);
     }
 
-    // GET STATS (public)
+    // GET STATS
     public function getStats()
     {
-        $totalUsers = User::count();
-        $totalRequests = BloodRequest::count();
-        $approvedRequests = BloodRequest::where('status', 'Approved')->count();
-
-        // For now leave total units empty (null) as requested
-        $totalUnits = null;
-
         return response()->json([
-            'total_users' => $totalUsers,
-            'total_requests' => $totalRequests,
-            'approved_requests' => $approvedRequests,
-            'total_units' => $totalUnits,
+            'total_users' => User::count(),
+            'total_requests' => BloodRequest::count(),
+            'approved_requests' => BloodRequest::where('status','Approved')->count(),
+            'total_units' => null
         ]);
     }
-
 }
-
