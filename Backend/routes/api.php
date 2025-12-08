@@ -26,6 +26,7 @@ Route::get('/admin/users', [UsersController::class, 'getAllUsers']);
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
+Route::get('/hospital/blood-requests', [UsersController::class, 'getHospitalBloodRequests']);
 // STATS ROUTE
 Route::get('/stats', [UsersController::class, 'getStats']);
 

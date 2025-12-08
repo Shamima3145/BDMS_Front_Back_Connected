@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ClipboardList, Clock, CheckCircle, XCircle, Eye, Check, X } from 'lucide-react'
 import DataTable from '@/components/DataTable'
@@ -7,16 +7,68 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 const HospitalRequests = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [requests] = useState([])
+  const [requests, setRequests] = useState([])
+  const [statsData, setStatsData] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchRequests()
+  }, [])
+
+  const fetchRequests = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const user = JSON.parse(localStorage.getItem('user'))
+      
+      if (!user || !user.hospitalName) {
+        toast.error('Hospital information not found')
+        setLoading(false)
+        return
+      }
+
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/hospital/blood-requests?hospital_name=${encodeURIComponent(user.hospitalName)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const apiRequests = response.data.requests.map((req) => ({
+        id: req.request_id,
+        patientName: req.patient_name,
+        bloodGroup: req.blood_group,
+        units: req.units,
+        requestedBy: req.requested_by,
+        status: req.status,
+        requestDate: new Date(req.created_at).toLocaleDateString(),
+      }))
+
+      setRequests(apiRequests)
+      setStatsData(response.data.stats)
+    } catch (error) {
+      console.error('Error fetching requests:', error)
+      toast.error('Failed to fetch blood requests')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const stats = [
     {
       title: 'Total Requests',
-      value: 24,
+      value: statsData.total,
       icon: ClipboardList,
       color: 'bg-[#0EA5E9]',
       borderColor: 'border-[#BAE6FD]',
@@ -24,7 +76,7 @@ const HospitalRequests = () => {
     },
     {
       title: 'Pending',
-      value: 8,
+      value: statsData.pending,
       icon: Clock,
       color: 'bg-[#F59E0B]',
       borderColor: 'border-[#FDE68A]',
@@ -32,7 +84,7 @@ const HospitalRequests = () => {
     },
     {
       title: 'Approved',
-      value: 12,
+      value: statsData.approved,
       icon: CheckCircle,
       color: 'bg-[#16A34A]',
       borderColor: 'border-[#A7F3D0]',
@@ -40,7 +92,7 @@ const HospitalRequests = () => {
     },
     {
       title: 'Rejected',
-      value: 4,
+      value: statsData.rejected,
       icon: XCircle,
       color: 'bg-[#DC2626]',
       borderColor: 'border-[#FECACA]',
@@ -49,13 +101,13 @@ const HospitalRequests = () => {
   ]
 
   const columns = [
-    { key: 'id', label: 'Request ID' },
-    { key: 'patientName', label: 'Patient Name' },
-    { key: 'bloodGroup', label: 'Blood Group' },
-    { key: 'units', label: 'Units' },
-    { key: 'urgency', label: 'Urgency' },
-    { key: 'requestDate', label: 'Request Date' },
-    { key: 'status', label: 'Status' },
+    { header: 'Request ID', accessor: 'id' },
+    // { header: 'Patient Name', accessor: 'patientName' },
+    { header: 'Blood Group', accessor: 'bloodGroup' },
+    { header: 'Units', accessor: 'units' },
+    // { header: 'Requested By', accessor: 'requestedBy' },
+    { header: 'Request Date', accessor: 'requestDate' },
+    { header: 'Status', accessor: 'status' },
   ]
 
   const handleApprove = (request) => {
@@ -162,7 +214,7 @@ const HospitalRequests = () => {
               <div className="flex gap-2 flex-wrap">
                 <Input
                   type="text"
-                  placeholder="Search by ID or Patient..."
+                  placeholder="Search by ID ..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-64"
@@ -177,13 +229,19 @@ const HospitalRequests = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <DataTable
-              data={filteredRequests}
-              columns={columns}
-              actions={getActions}
-              searchable={false}
-              paginationColor="blue"
-            />
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading requests...</p>
+              </div>
+            ) : (
+              <DataTable
+                data={filteredRequests}
+                columns={columns}
+                actions={getActions}
+                searchable={false}
+                paginationColor="blue"
+              />
+            )}
           </CardContent>
         </Card>
       </motion.div>

@@ -338,6 +338,32 @@ class UsersController extends Controller
         return response()->json(['requests' => $requests]);
     }
 
+    // GET HOSPITAL BLOOD REQUESTS
+    public function getHospitalBloodRequests(Request $request)
+    {
+        $hospitalName = $request->query('hospital_name');
+        
+        if (!$hospitalName) {
+            return response()->json(['message' => 'Hospital name is required'], 400);
+        }
+
+        $requests = BloodRequest::where('hospital_name', $hospitalName)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $stats = [
+            'total' => $requests->count(),
+            'pending' => $requests->where('status', 'Pending')->count(),
+            'approved' => $requests->where('status', 'Approved')->count(),
+            'rejected' => $requests->where('status', 'Rejected')->count(),
+        ];
+
+        return response()->json([
+            'requests' => $requests,
+            'stats' => $stats
+        ]);
+    }
+
     // GET STATS
     public function getStats()
     {
