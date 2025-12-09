@@ -45,7 +45,7 @@ const HospitalLayout = () => {
           </span>
         </div>
         <div className="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
-          <span className="font-semibold text-secondary">{user?.name || 'User'}</span>
+          <span className="font-semibold text-blue-900">{user?.name || 'User'}</span>
           <Button
           size="sm"
           className="bg-[#0EA5E9] hover:bg-[#0284C7] flex items-center gap-2 shadow-md"
