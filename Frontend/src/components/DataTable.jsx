@@ -118,7 +118,7 @@ const DataTable = ({
                 )}
                 {customActions && (
                   <td className="py-3 px-6">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
                       {customActions(row).map((action, idx) => (
                         <Button
                           key={idx}

@@ -1,22 +1,63 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useSelector } from 'react-redux'
 import { Droplet, Users, CheckCircle, Activity, TrendingUp } from 'lucide-react'
 import BloodGroupCard from '@/components/BloodGroupCard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const AdminDashboard = () => {
-  const inventory = useSelector((state) => state.inventory)
+  const [dashboardData, setDashboardData] = useState({
+    totalDonors: 0,
+    totalRequests: 0,
+    approvedRequests: 0,
+    totalBloodUnits: 0,
+    inventory: {
+      'A+': 0,
+      'A-': 0,
+      'B+': 0,
+      'B-': 0,
+      'AB+': 0,
+      'AB-': 0,
+      'O+': 0,
+      'O-': 0,
+    }
+  })
+  const [loading, setLoading] = useState(true)
 
-  const bloodGroupData = Object.entries(inventory.bloodGroups).map(([group, units]) => ({
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://127.0.0.1:8000/api/admin/dashboard-stats', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setDashboardData(response.data.data)
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+      toast.error('Failed to fetch dashboard data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const bloodGroupData = Object.entries(dashboardData.inventory).map(([group, units]) => ({
     bloodGroup: group,
     units,
   }))
+
+  const totalBloodUnits = dashboardData.totalBloodUnits
 
   const stats = [
     {
       icon: Users,
       title: 'Total Donors',
-      value: inventory.totalDonors,
+      value: dashboardData.totalDonors,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
@@ -25,7 +66,7 @@ const AdminDashboard = () => {
     {
       icon: Droplet,
       title: 'Total Requests',
-      value: inventory.totalRequests,
+      value: dashboardData.totalRequests,
       color: 'from-red-500 to-red-600',
       bgColor: 'bg-red-50',
       iconColor: 'text-red-600',
@@ -34,7 +75,7 @@ const AdminDashboard = () => {
     {
       icon: CheckCircle,
       title: 'Approved Requests',
-      value: inventory.approvedRequests,
+      value: dashboardData.approvedRequests,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
@@ -42,8 +83,8 @@ const AdminDashboard = () => {
     },
     {
       icon: Activity,
-      title: 'Total Blood Units (in ml)',
-      value: inventory.totalBloodUnits,
+      title: 'Total Blood Units',
+      value: totalBloodUnits,
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
@@ -52,7 +93,7 @@ const AdminDashboard = () => {
   ]
 
   // Calculate pie chart data
-  const totalUnits = Object.values(inventory.bloodGroups).reduce((sum, units) => sum + units, 0)
+  const totalUnits = totalBloodUnits
   const pieChartData = bloodGroupData.map((item, index) => {
     const percentage = totalUnits > 0 ? ((item.units / totalUnits) * 100).toFixed(1) : 0
     const colors = [
@@ -74,6 +115,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading dashboard data...</p>
+        </div>
+      ) : (
+        <>
       {/* Enhanced Stat Cards */}
       <motion.section
         initial={{ opacity: 0 }}
@@ -201,6 +248,8 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </motion.section>
+        </>
+      )}
     </div>
   )
 }

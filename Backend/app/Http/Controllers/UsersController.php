@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Hospital;
 use App\Models\BloodRequest;
 use App\Models\BloodBank;
+use App\Models\Admin;
 
 class UsersController extends Controller
 {
@@ -60,18 +61,11 @@ class UsersController extends Controller
         $email = strtolower(trim($request->email));
         $password = $request->password;
 
-        // Admin static login
-        if ($email === 'admin@bloodbridge.com' && $password === 'admin123') {
-            $admin = (object)[
-                'id' => 1,
-                'firstname' => 'Admin',
-                'lastname' => '',
-                'email' => 'admin@bloodbridge.com',
-                'role' => 'admin'
-            ];
-
-            $token = 'admin_static_token_' . time();
-
+        // Try finding admin first
+        $admin = Admin::where('email', $email)->first();
+        if ($admin && Hash::check($password, $admin->password)) {
+            $token = 'admin_token_' . time();
+            
             return response()->json([
                 'message' => 'Login successful',
                 'access_token' => $token,
@@ -79,9 +73,7 @@ class UsersController extends Controller
                 'userType' => 'admin',
                 'user' => [
                     'id' => $admin->id,
-                    'name' => $admin->firstname,
-                    'firstname' => $admin->firstname,
-                    'lastname' => $admin->lastname,
+                    'admin_id' => $admin->admin_id,
                     'email' => $admin->email,
                     'role' => 'admin'
                 ],
@@ -258,6 +250,16 @@ class UsersController extends Controller
             ->get();
 
         return response()->json(['users' => $users]);
+    }
+
+    // GET ALL HOSPITALS FOR ADMIN
+    public function getAllHospitals(Request $request)
+    {
+        $hospitals = Hospital::select('id', 'hospitalName', 'registrationId', 'hospitalType', 'yearEstablished', 'address', 'city', 'district', 'email', 'contactNumber', 'emergencyHotline', 'hasBloodBank', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['hospitals' => $hospitals]);
     }
 
     // UPDATE HOSPITAL PROFILE
@@ -466,5 +468,110 @@ class UsersController extends Controller
                 'O-' => (int)$totalInventory->o_negative ?? 0,
             ]
         ]);
+    }
+
+    // GET DASHBOARD STATISTICS
+    public function getDashboardStats()
+    {
+        // Get total donors from users table
+        $totalDonors = User::count();
+
+        // Get total requests from blood_requests table
+        $totalRequests = BloodRequest::count();
+
+        // Get approved requests
+        $approvedRequests = BloodRequest::where('status', 'approved')->count();
+
+        // Get total blood inventory
+        $totalInventory = BloodBank::selectRaw('
+            SUM(a_positive) as a_positive,
+            SUM(a_negative) as a_negative,
+            SUM(b_positive) as b_positive,
+            SUM(b_negative) as b_negative,
+            SUM(ab_positive) as ab_positive,
+            SUM(ab_negative) as ab_negative,
+            SUM(o_positive) as o_positive,
+            SUM(o_negative) as o_negative
+        ')->first();
+
+        $totalBloodUnits = (
+            ($totalInventory->a_positive ?? 0) +
+            ($totalInventory->a_negative ?? 0) +
+            ($totalInventory->b_positive ?? 0) +
+            ($totalInventory->b_negative ?? 0) +
+            ($totalInventory->ab_positive ?? 0) +
+            ($totalInventory->ab_negative ?? 0) +
+            ($totalInventory->o_positive ?? 0) +
+            ($totalInventory->o_negative ?? 0)
+        );
+
+        return response()->json([
+            'data' => [
+                'totalDonors' => $totalDonors,
+                'totalRequests' => $totalRequests,
+                'approvedRequests' => $approvedRequests,
+                'totalBloodUnits' => $totalBloodUnits,
+                'inventory' => [
+                    'A+' => (int)$totalInventory->a_positive ?? 0,
+                    'A-' => (int)$totalInventory->a_negative ?? 0,
+                    'B+' => (int)$totalInventory->b_positive ?? 0,
+                    'B-' => (int)$totalInventory->b_negative ?? 0,
+                    'AB+' => (int)$totalInventory->ab_positive ?? 0,
+                    'AB-' => (int)$totalInventory->ab_negative ?? 0,
+                    'O+' => (int)$totalInventory->o_positive ?? 0,
+                    'O-' => (int)$totalInventory->o_negative ?? 0,
+                ]
+            ]
+        ]);
+    }
+
+    // ADD NEW ADMIN
+    public function addAdmin(Request $request)
+    {
+        $request->validate([
+            'admin_id' => 'required|string|unique:admins,admin_id',
+            'email' => 'required|email|unique:admins,email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        $admin = Admin::create([
+            'admin_id' => $request->admin_id,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'message' => 'Admin created successfully',
+            'admin' => [
+                'id' => $admin->id,
+                'admin_id' => $admin->admin_id,
+                'email' => $admin->email,
+            ],
+        ]);
+    }
+
+    // CHANGE ADMIN PASSWORD
+    public function changeAdminPassword(Request $request)
+    {
+        $request->validate([
+            'admin_id' => 'required|string',
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8',
+        ]);
+
+        $admin = Admin::where('admin_id', $request->admin_id)->first();
+
+        if (!$admin) {
+            return response()->json(['message' => 'Admin not found'], 404);
+        }
+
+        if (!Hash::check($request->current_password, $admin->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 401);
+        }
+
+        $admin->password = Hash::make($request->new_password);
+        $admin->save();
+
+        return response()->json(['message' => 'Password changed successfully']);
     }
 }

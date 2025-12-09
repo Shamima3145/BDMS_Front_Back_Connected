@@ -9,7 +9,8 @@ import {
   FileText, 
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Book
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '@/store/slices/authSlice'
@@ -33,6 +34,7 @@ const AdminLayout = () => {
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/inventory', icon: Database, label: 'Inventory' },
     { path: '/admin/donors', icon: Users, label: 'Donors' },
+    { path: '/admin/manage-users', icon: Book, label: 'Manage Users' },
     { path: '/admin/reports', icon: FileText, label: 'Reports' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ]
@@ -70,14 +72,14 @@ const AdminLayout = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 py-2 px-4 rounded-xl transition ${
+                className={`flex items-center gap-3 py-2 px-4 rounded-xl transition whitespace-nowrap ${
                   isActive(item.path)
                     ? 'bg-white/20 font-bold shadow text-[#ffefef]'
                     : 'hover:bg-white/20'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
-                {item.label}
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </Link>
             ))}
 

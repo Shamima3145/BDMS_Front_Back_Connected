@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, UserPlus, Key } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/Card'
@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 // Validation schemas
 const updateInfoSchema = yup.object({
@@ -45,14 +46,43 @@ const passwordChangeSchema = yup.object({
 
 const Settings = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [adminInfo, setAdminInfo] = useState({
+    adminId: '',
+    email: '',
+  })
+
+  // Load admin info from localStorage
+  useEffect(() => {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        const info = {
+          adminId: user.admin_id || '',
+          email: user.email || '',
+        }
+        setAdminInfo(info)
+        setValueInfo('adminId', info.adminId)
+        setValueInfo('email', info.email)
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+        toast.error('Failed to load admin information')
+      }
+    }
+  }, [])
 
   // Update Info Form
   const {
     register: registerInfo,
     handleSubmit: handleSubmitInfo,
     formState: { errors: errorsInfo },
+    setValue: setValueInfo,
   } = useForm({
     resolver: yupResolver(updateInfoSchema),
+    defaultValues: {
+      adminId: '',
+      email: '',
+    },
   })
 
   // Add Admin Form
@@ -89,10 +119,31 @@ const Settings = () => {
   const onAddAdmin = async (data) => {
     setIsSubmitting(true)
     try {
+      const token = localStorage.getItem('token')
+      await axios.post(
+        'http://127.0.0.1:8000/api/admin/add',
+        {
+          admin_id: data.newAdminId,
+          email: data.email,
+          password: data.password,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       toast.success('New admin added successfully!')
       resetAdmin()
     } catch (error) {
-      toast.error('Failed to add admin')
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors
+        if (errors.admin_id) toast.error(errors.admin_id[0])
+        else if (errors.email) toast.error(errors.email[0])
+        else toast.error('Failed to add admin')
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to add admin')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -101,10 +152,28 @@ const Settings = () => {
   const onChangePassword = async (data) => {
     setIsSubmitting(true)
     try {
+      const token = localStorage.getItem('token')
+      await axios.post(
+        'http://127.0.0.1:8000/api/admin/change-password',
+        {
+          admin_id: adminInfo.adminId,
+          current_password: data.currentPassword,
+          new_password: data.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       toast.success('Password changed successfully!')
       resetPassword()
     } catch (error) {
-      toast.error('Failed to change password')
+      if (error.response?.status === 401) {
+        toast.error('Current password is incorrect')
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to change password')
+      }
     } finally {
       setIsSubmitting(false)
     }
