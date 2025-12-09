@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Phone, Mail, Calendar, Droplet, User, MapPin, Filter, Download } from 'lucide-react'
+import { Search, Phone, Mail, Calendar, Droplet, User, MapPin, Filter, Download, MessageSquare } from 'lucide-react'
 import axios from 'axios'
 import DataTable from '@components/DataTable'
 import { Button } from '@components/ui/Button'
@@ -68,14 +68,16 @@ const Donors = () => {
 
   const getActions = (donor) => [
     { 
-      label: 'Send SMS', 
+      icon: MessageSquare,
       onClick: () => handleSendSMS(donor), 
-      className: 'bg-blue-500 hover:bg-blue-600 text-white'
+      className: 'bg-blue-500 hover:bg-blue-600 text-white',
+      title: 'Send SMS'
     },
     { 
-      label: 'Send Email', 
+      icon: Mail,
       onClick: () => handleSendEmail(donor), 
-      className: 'bg-green-500 hover:bg-green-600 text-white'
+      className: 'bg-green-500 hover:bg-green-600 text-white',
+      title: 'Send Email'
     },
   ]
 

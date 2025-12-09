@@ -119,16 +119,20 @@ const DataTable = ({
                 {customActions && (
                   <td className="py-3 px-6">
                     <div className="flex gap-2">
-                      {customActions(row).map((action, idx) => (
-                        <Button
-                          key={idx}
-                          size="sm"
-                          onClick={action.onClick}
-                          className={action.className || ''}
-                        >
-                          {action.label}
-                        </Button>
-                      ))}
+                      {customActions(row).map((action, idx) => {
+                        const Icon = action.icon
+                        return (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            onClick={action.onClick}
+                            className={action.className || ''}
+                            title={action.title || action.label}
+                          >
+                            {Icon ? <Icon size={16} /> : action.label}
+                          </Button>
+                        )
+                      })}
                     </div>
                   </td>
                 )}
