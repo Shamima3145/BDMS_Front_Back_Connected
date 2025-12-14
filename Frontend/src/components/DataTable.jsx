@@ -44,7 +44,7 @@ const DataTable = ({
 
   return (
     <div className="w-full">
-      <table className="w-full">
+      <table className="w-full table-fixed">
         <thead className="bg-gray-50">
           <tr>
               {columns.map((col, idx) => (
@@ -72,7 +72,7 @@ const DataTable = ({
                     : value
                   
                   return (
-                    <td key={colIdx} className="py-3 px-6 whitespace-nowrap">
+                    <td key={colIdx} className="py-3 px-6 break-words">
                       {col.accessor === 'status' ? (
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(
@@ -143,7 +143,7 @@ const DataTable = ({
                             title={action.title || action.label}
                             disabled={action.disabled}
                           >
-                            {Icon ? <Icon size={16} /> : action.label}
+                            {Icon ? <Icon size={20} /> : action.label}
                           </button>
                         )
                       })}

@@ -35,9 +35,9 @@ const HospitalLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-bl from-[#E0F2FF] to-[#FFF8E7]">
+    <div className="h-screen flex flex-col bg-gradient-to-bl from-[#E0F2FF] to-[#FFF8E7] overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-l from-[#E0F2FF] to-white flex justify-between items-center px-8 py-3 text-blue-900">
+      <header className="bg-gradient-to-l from-[#E0F2FF] to-white flex justify-between items-center px-8 py-3 text-blue-900 flex-shrink-0">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
           <span className="font-bold text-blue-800 text-xl tracking-wide">
@@ -57,9 +57,9 @@ const HospitalLayout = () => {
         
       </header>
 
-      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl">
+      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-52 flex flex-col py-8 bg-[#E0F2FF] border border-[#BAE6FD] shadow-lg rounded-tr-3xl rounded-br-3xl">
+        <aside className="w-52 flex-shrink-0 flex flex-col py-8 bg-[#E0F2FF] border border-[#BAE6FD] shadow-lg rounded-tr-3xl rounded-br-3xl overflow-y-auto">
           <div className="mb-8 flex flex-col items-center text-center">
             <p className="font-bold mt-4 text-blue-800">{getHospitalName()}</p>
             <p className="text-sm text-gray-500">{user?.email || 'hospital@example.com'}</p>
@@ -83,7 +83,7 @@ const HospitalLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <section className="flex-1 py-10 px-10">
+        <section className="flex-1 py-10 px-10 overflow-y-auto">
           <Outlet />
         </section>
       </div>

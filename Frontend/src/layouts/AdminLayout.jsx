@@ -43,9 +43,9 @@ const AdminLayout = () => {
   const isActive = (path) => location.pathname === path
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#FFFAEF] to-primary flex justify-between items-center px-8 py-3">
+      <header className="bg-gradient-to-r from-[#FFFAEF] to-primary flex justify-between items-center px-8 py-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
           <span className="font-bold text-primary text-xl tracking-wide">
@@ -65,9 +65,9 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl">
+      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl overflow-hidden">
         {/* Sidebar */}
-        <aside className="bg-primary text-white w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl">
+        <aside className="bg-primary text-white w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl flex-shrink-0 overflow-y-auto">
           <nav className="flex flex-col gap-2 text-white px-2">
             {menuItems.map((item) => (
               <Link
@@ -133,7 +133,7 @@ const AdminLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 overflow-y-auto">
           <Outlet />
         </div>
       </div>

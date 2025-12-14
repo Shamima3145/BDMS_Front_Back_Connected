@@ -42,8 +42,7 @@ const Donors = () => {
 
   const columns = [
     { header: 'Donor ID', accessor: 'id' },
-    { header: 'First Name', accessor: 'firstname' },
-    { header: 'Last Name', accessor: 'lastname' },
+    { header: 'Email', accessor: 'email' },
     { header: 'Blood Group', accessor: 'bloodgroup', className: 'font-extrabold text-red-600' },
     { header: 'Contact', accessor: 'contactNumber' },
     { header: 'Location', accessor: 'area' },

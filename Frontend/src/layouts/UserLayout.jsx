@@ -40,9 +40,9 @@ const UserLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-green-50 overflow-x-hidden">
+    <div className="h-screen flex flex-col bg-green-50 overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-r from-white to-secondary flex justify-between items-center px-8 py-3 text-white">
+      <header className="bg-gradient-to-r from-white to-secondary flex justify-between items-center px-8 py-3 text-white flex-shrink-0">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
           <span className="font-bold text-green-800 text-xl tracking-wide">
@@ -64,7 +64,7 @@ const UserLayout = () => {
 
       <div className="flex flex-1 mx-auto w-full max-w-full bg-gradient-to-br from-white to-green-100 shadow-none rounded-xl overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-52 flex-shrink-0 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl border-r border-green-700">
+        <aside className="w-52 flex-shrink-0 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl border-r border-green-700 overflow-y-auto">
           <div className="mb-8 flex flex-col items-center text-center">
             <p className="font-bold mt-4 text-green-800">{getUserName()}</p>
             <p className="text-sm text-gray-500">{user?.email || 'iam@gmail.com'}</p>
@@ -88,7 +88,7 @@ const UserLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <section className="flex-1 py-10 px-10 overflow-x-hidden">
+        <section className="flex-1 py-10 px-10 overflow-y-auto">
           <Outlet />
         </section>
       </div>
