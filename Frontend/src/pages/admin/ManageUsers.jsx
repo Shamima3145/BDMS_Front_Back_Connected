@@ -73,7 +73,12 @@ const ManageUsers = () => {
       const response = await axios.get('http://127.0.0.1:8000/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setUsers(response.data.users || [])
+      // Transform data to add full name
+      const usersData = (response.data.users || []).map(user => ({
+        ...user,
+        name: `${user.firstname || ''} ${user.lastname || ''}`.trim()
+      }))
+      setUsers(usersData)
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
@@ -137,7 +142,7 @@ const ManageUsers = () => {
   }
 
   const userColumns = [
-    { header: 'Name', accessor: 'firstname' },
+    { header: 'ID', accessor: 'id' },
     { header: 'Email', accessor: 'email' },
     { header: 'Blood Group', accessor: 'bloodgroup' },
     { header: 'Contact', accessor: 'contactNumber' },

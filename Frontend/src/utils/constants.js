@@ -23,13 +23,13 @@ export const districts = [
 ]
 
 export const requestStatusColors = {
-  Pending: 'bg-yellow-100 text-yellow-700',
-  'In Process': 'bg-blue-100 text-blue-700',
-  Accepted: 'bg-green-100 text-green-700',
-  Completed: 'bg-green-100 text-green-700',
-  Declined: 'bg-red-100 text-red-700',
+  Pending: 'text-yellow-700',
+  'In Process': 'text-blue-700',
+  Accepted: 'text-green-700',
+  Completed: 'text-green-700',
+  Declined: 'text-red-700',
 }
 
 export const getStatusColor = (status) => {
-  return requestStatusColors[status] || 'bg-gray-100 text-gray-700'
+  return requestStatusColors[status] || 'text-gray-700'
 }

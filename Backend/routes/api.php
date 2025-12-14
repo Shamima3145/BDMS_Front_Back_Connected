@@ -28,6 +28,11 @@ Route::get('/admin/dashboard-stats', [UsersController::class, 'getDashboardStats
 Route::post('/admin/add', [UsersController::class, 'addAdmin']);
 Route::post('/admin/change-password', [UsersController::class, 'changeAdminPassword']);
 
+// Admin Donations Routes
+Route::get('/admin/donations', [UsersController::class, 'getAdminDonations']);
+Route::post('/admin/donations', [UsersController::class, 'createDonation']);
+Route::patch('/admin/donations/{id}', [UsersController::class, 'updateDonation']);
+
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
@@ -51,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Profile & Password Routes
     Route::put('/user/profile', [UsersController::class, 'updateProfile']);
     Route::put('/user/password', [UsersController::class, 'updatePassword']);
+
+    // User Donations Route
+    Route::get('/user/donations', [UsersController::class, 'getUserDonations']);
 
     // Hospital Profile & Password Routes
     Route::put('/hospital/profile', [UsersController::class, 'updateHospitalProfile']);

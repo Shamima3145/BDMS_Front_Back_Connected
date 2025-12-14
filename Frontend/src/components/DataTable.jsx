@@ -44,10 +44,9 @@ const DataTable = ({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-          <thead className="bg-gray-50">
-            <tr>
+      <table className="w-full">
+        <thead className="bg-gray-50">
+          <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
@@ -65,38 +64,53 @@ const DataTable = ({
           </thead>
           <tbody>
             {visibleData.map((row, rowIdx) => (
-              <tr key={rowIdx} className="border-b border-gray-200 hover:bg-gray-50">
-                {columns.map((col, colIdx) => (
-                  <td key={colIdx} className="py-3 px-6">
-                    {col.accessor === 'status' ? (
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(
-                          row[col.accessor]
-                        )}`}
-                      >
-                        {row[col.accessor]}
-                      </span>
-                    ) : col.accessor === 'eligibilityStatus' ? (
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          row[col.accessor]?.includes('✓')
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {row[col.accessor]}
-                      </span>
-                    ) : col.accessor === 'blood' ? (
-                      <span className="font-extrabold text-red-600">
-                        {row[col.accessor]}
-                      </span>
-                    ) : (
-                      <span className={col.className || ''}>
-                        {row[col.accessor]}
-                      </span>
-                    )}
-                  </td>
-                ))}
+              <tr key={rowIdx} className="bg-white border-b border-gray-200">
+                {columns.map((col, colIdx) => {
+                  const value = col.render ? col.render(row[col.accessor]) : row[col.accessor]
+                  const displayValue = typeof value === 'string' && value.includes('|') 
+                    ? value.split('|') 
+                    : value
+                  
+                  return (
+                    <td key={colIdx} className="py-3 px-6 whitespace-nowrap">
+                      {col.accessor === 'status' ? (
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(
+                            row[col.accessor]
+                          )}`}
+                        >
+                          {row[col.accessor]}
+                        </span>
+                      ) : col.accessor === 'eligibilityStatus' ? (
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            row[col.accessor]?.includes('✓')
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {row[col.accessor]}
+                        </span>
+                      ) : col.accessor === 'blood' ? (
+                        <span className="font-extrabold text-red-600">
+                          {row[col.accessor]}
+                        </span>
+                      ) : Array.isArray(displayValue) ? (
+                        <div className="flex flex-col">
+                          {displayValue.map((line, idx) => (
+                            <span key={idx} className={col.className || ''}>
+                              {line}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className={col.className || ''}>
+                          {displayValue}
+                        </span>
+                      )}
+                    </td>
+                  )
+                })}
                 {showActions && (
                   <td className="py-3 px-6 flex gap-2">
                     <Button
@@ -122,15 +136,15 @@ const DataTable = ({
                       {customActions(row).map((action, idx) => {
                         const Icon = action.icon
                         return (
-                          <Button
+                          <button
                             key={idx}
-                            size="sm"
                             onClick={action.onClick}
-                            className={action.className || ''}
+                            className={action.className || 'p-2 bg-gray-500 hover:bg-gray-600 text-white rounded'}
                             title={action.title || action.label}
+                            disabled={action.disabled}
                           >
                             {Icon ? <Icon size={16} /> : action.label}
-                          </Button>
+                          </button>
                         )
                       })}
                     </div>
@@ -140,7 +154,6 @@ const DataTable = ({
             ))}
           </tbody>
         </table>
-      </div>
 
       <div className="flex justify-between items-center mt-4">
         <div className="flex items-center gap-4">

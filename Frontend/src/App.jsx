@@ -18,6 +18,7 @@ import Donors from '@/pages/admin/Donors'
 import Reports from '@/pages/admin/Reports'
 import Settings from '@/pages/admin/Settings'
 import ManageUsers from '@/pages/admin/ManageUsers'
+import Donations from '@/pages/admin/Donations'
 import UserDashboard from '@/pages/user/UserDashboard'
 import DonorHistory from '@/pages/user/DonorHistory'
 import TrackDonation from '@/pages/user/TrackDonation'
@@ -78,6 +79,7 @@ function App() {
         { path: 'requests/public', element: <PublicRequests /> },
         { path: 'requests/hospital', element: <HospitalRequests /> },
         { path: 'donors', element: <Donors /> },
+        { path: 'donations', element: <Donations /> },
         { path: 'manage-users', element: <ManageUsers /> },
         { path: 'reports', element: <Reports /> },
         { path: 'settings', element: <Settings /> },

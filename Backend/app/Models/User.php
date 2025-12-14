@@ -33,4 +33,9 @@ class User extends Authenticatable
     protected $casts = [
         'lastDonationDate' => 'date',
     ];
+
+    public function donations()
+    {
+        return $this->hasMany(Donation::class);
+    }
 }

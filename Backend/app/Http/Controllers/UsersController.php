@@ -9,6 +9,7 @@ use App\Models\Hospital;
 use App\Models\BloodRequest;
 use App\Models\BloodBank;
 use App\Models\Admin;
+use App\Models\Donation;
 
 class UsersController extends Controller
 {
@@ -574,4 +575,175 @@ class UsersController extends Controller
 
         return response()->json(['message' => 'Password changed successfully']);
     }
+
+    // GET USER DONATIONS WITH PAGINATION
+    public function getUserDonations(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $perPage = $request->query('per_page', 5);
+        $year = $request->query('year');
+
+        $query = Donation::where('user_id', $user->id)
+            ->orderBy('donated_at', 'desc');
+
+        // Filter by year if provided
+        if ($year && $year !== 'all') {
+            $query->whereYear('donated_at', $year);
+        }
+
+        $donations = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $donations->items(),
+            'current_page' => $donations->currentPage(),
+            'per_page' => $donations->perPage(),
+            'total' => $donations->total(),
+            'last_page' => $donations->lastPage(),
+        ]);
+    }
+
+    // ADMIN: Get all donations with pagination and search
+    public function getAdminDonations(Request $request)
+    {
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search', '');
+        $page = $request->query('page', 1);
+
+        $query = Donation::with('user:id,firstname,lastname,email')
+            ->orderBy('donated_at', 'desc');
+
+        // Search functionality
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('center_name', 'like', "%{$search}%")
+                  ->orWhere('blood_group', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('firstname', 'like', "%{$search}%")
+                                ->orWhere('lastname', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $donations = $query->paginate($perPage);
+
+        // Format the response data
+        $formattedData = $donations->map(function($donation) {
+            return [
+                'id' => $donation->id,
+                'user_id' => $donation->user_id,
+                'donor_name' => $donation->user ? $donation->user->firstname . ' ' . $donation->user->lastname : 'N/A',
+                'donor_email' => $donation->user ? $donation->user->email : 'N/A',
+                'donated_at' => $donation->donated_at,
+                'blood_group' => $donation->blood_group,
+                'units' => $donation->units,
+                'type' => $donation->type,
+                'center_name' => $donation->center_name,
+                'status' => $donation->status,
+                'notes' => $donation->notes,
+            ];
+        });
+
+        return response()->json([
+            'data' => $formattedData,
+            'current_page' => $donations->currentPage(),
+            'per_page' => $donations->perPage(),
+            'total' => $donations->total(),
+            'last_page' => $donations->lastPage(),
+        ]);
+    }
+
+    // ADMIN: Create a new donation record
+    public function createDonation(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'donated_at' => 'required|date',
+            'blood_group' => 'required|string',
+            'units' => 'required|integer|min:1',
+            'type' => 'nullable|string',
+            'center_name' => 'required|string',
+            'status' => 'required|in:Completed,In Process,Deferred,Cancelled',
+        ]);
+
+        $donation = Donation::create([
+            'user_id' => $request->user_id,
+            'donated_at' => $request->donated_at,
+            'blood_group' => $request->blood_group,
+            'units' => $request->units,
+            'type' => $request->type ?? 'Whole Blood',
+            'center_name' => $request->center_name,
+            'status' => $request->status,
+            'notes' => $request->notes ?? null,
+        ]);
+
+        // Update user's last donation date if status is Completed
+        if ($request->status === 'Completed') {
+            $user = User::find($request->user_id);
+            if ($user) {
+                $user->lastDonationDate = $request->donated_at;
+                $user->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'Donation recorded successfully',
+            'donation' => $donation,
+        ], 201);
+    }
+
+    // ADMIN: Update a donation record
+    public function updateDonation(Request $request, $id)
+    {
+        $donation = Donation::findOrFail($id);
+
+        $request->validate([
+            'user_id' => 'sometimes|required|exists:users,id',
+            'donated_at' => 'sometimes|required|date',
+            'blood_group' => 'sometimes|required|string',
+            'units' => 'sometimes|required|integer|min:1',
+            'type' => 'nullable|string',
+            'center_name' => 'sometimes|required|string',
+            'status' => 'sometimes|required|in:Completed,In Process,Deferred,Cancelled',
+        ]);
+
+        $donation->update($request->only([
+            'user_id',
+            'donated_at',
+            'blood_group',
+            'units',
+            'type',
+            'center_name',
+            'status',
+            'notes',
+        ]));
+
+        // Update user's last donation date if status is Completed
+        if ($request->has('status') && $request->status === 'Completed') {
+            $user = User::find($donation->user_id);
+            if ($user) {
+                $lastDonation = Donation::where('user_id', $user->id)
+                    ->where('status', 'Completed')
+                    ->orderBy('donated_at', 'desc')
+                    ->first();
+                
+                if ($lastDonation) {
+                    $user->lastDonationDate = $lastDonation->donated_at;
+                    $user->save();
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => 'Donation updated successfully',
+            'donation' => $donation,
+        ]);
+    }
 }
+

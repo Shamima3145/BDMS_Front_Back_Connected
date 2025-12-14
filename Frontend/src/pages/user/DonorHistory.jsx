@@ -1,24 +1,127 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Award, Droplet, Download, Filter } from 'lucide-react'
+import { Calendar, Award, Droplet, Download, Filter, Eye } from 'lucide-react'
 import DataTable from '@components/DataTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/Card'
 import { Button } from '@components/ui/Button'
 import { Select } from '@components/ui/Select'
 import { formatDate } from '@utils/helpers'
 import { toast } from 'react-toastify'
+import { useSelector } from 'react-redux'
+import axios from 'axios'
 
 const DonorHistory = () => {
   const [filterYear, setFilterYear] = useState('all')
-  const [donations] = useState([])
+  const [donations, setDonations] = useState([])
+  const [lastDonationDate, setLastDonationDate] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [perPage, setPerPage] = useState(5)
+  const [totalDonations, setTotalDonations] = useState(0)
+  const [lastPage, setLastPage] = useState(1)
+  const user = useSelector((state) => state.auth.user)
+
+  // Fetch donations from API
+  const fetchDonations = async (page = 1, perPageValue = perPage, year = filterYear) => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: perPageValue.toString(),
+      })
+      
+      if (year && year !== 'all') {
+        params.append('year', year)
+      }
+
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/user/donations?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      setDonations(response.data.data || [])
+      setCurrentPage(response.data.current_page)
+      setTotalDonations(response.data.total)
+      setLastPage(response.data.last_page)
+    } catch (error) {
+      console.error('Error fetching donations:', error)
+      toast.error('Failed to load donation history')
+      setDonations([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch last donation date from user data
+  useEffect(() => {
+    if (user?.lastDonationDate) {
+      setLastDonationDate(user.lastDonationDate)
+    } else {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr)
+          if (userData?.lastDonationDate) {
+            setLastDonationDate(userData.lastDonationDate)
+          }
+        } catch (error) {
+          console.error('Error parsing user data:', error)
+        }
+      }
+    }
+  }, [user])
+
+  // Fetch donations on mount and when filters change
+  useEffect(() => {
+    fetchDonations(currentPage, perPage, filterYear)
+  }, [currentPage, perPage, filterYear])
+
+  // Handle pagination
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= lastPage) {
+      setCurrentPage(newPage)
+    }
+  }
+
+  const handlePerPageChange = (e) => {
+    const newPerPage = parseInt(e.target.value)
+    setPerPage(newPerPage)
+    setCurrentPage(1) // Reset to first page
+  }
+
+  const handleYearChange = (e) => {
+    setFilterYear(e.target.value)
+    setCurrentPage(1) // Reset to first page
+  }
 
   const columns = [
-    { key: 'id', label: 'Donation ID' },
-    { key: 'date', label: 'Date' },
-    { key: 'location', label: 'Location' },
-    { key: 'quantity', label: 'Quantity' },
-    { key: 'recipient', label: 'Recipient Type' },
-    { key: 'status', label: 'Status' },
+    { header: 'Donation ID', accessor: 'id' },
+    { 
+      header: 'Date & Time', 
+      accessor: 'donated_at',
+      render: (value) => {
+        const date = new Date(value)
+        const dateStr = date.toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short', 
+          year: 'numeric' 
+        })
+        const timeStr = date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true 
+        })
+        return `${dateStr}|${timeStr}`
+      }
+    },
+    { header: 'Blood Group', accessor: 'blood_group' },
+    { header: 'Units Donated', accessor: 'units' },
+    { header: 'Donation Type', accessor: 'type' },
+    { header: 'Donation Center', accessor: 'center_name' },
+    { header: 'Status', accessor: 'status' },
   ]
 
   const handleDownloadCertificate = (donation) => {
@@ -35,23 +138,24 @@ const DonorHistory = () => {
 
   const getActions = (donation) => [
     {
-      label: 'View Details',
+      icon: Eye,
       onClick: () => handleViewDetails(donation),
-      variant: 'default',
+      className: 'bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2',
+      title: 'View Details',
     },
     {
-      label: 'Download Certificate',
+      icon: Download,
       onClick: () => handleDownloadCertificate(donation),
-      variant: 'outline',
+      className: 'bg-green-500 hover:bg-green-600 text-white rounded-full p-2 disabled:opacity-50',
+      title: 'Download Certificate',
       disabled: !donation.certificate,
     },
   ]
 
   // Calculate statistics
-  const totalDonations = donations.length
-  const totalBlood = donations.reduce((acc, d) => acc + parseInt(d.quantity), 0)
-  const livesSaved = Math.floor(totalDonations * 3) // Estimate: 1 donation saves 3 lives
-  const lastDonation = donations[0]?.date
+  const totalDonationsCount = donations.length
+  const totalBlood = donations.reduce((acc, d) => acc + parseInt(d.units || 0), 0)
+  const livesSaved = Math.floor(totalDonationsCount * 3) // Estimate: 1 donation saves 3 lives
 
   const stats = [
     {
@@ -63,33 +167,30 @@ const DonorHistory = () => {
     },
     {
       title: 'Blood Donated',
-      value: `${(totalBlood / 1000).toFixed(1)}L`,
+      value: `${totalBlood} units`,
       icon: Award,
       color: 'bg-blue-500',
-      description: `${totalBlood}ml total`,
+      description: `${totalBlood * 450}ml total`,
     },
     {
       title: 'Lives Saved',
-      value: `~${livesSaved}`,
+      value: `~${Math.floor(totalDonations * 3)}`,
       icon: Award,
       color: 'bg-green-500',
       description: 'Estimated impact',
     },
     {
       title: 'Last Donation',
-      value: formatDate(lastDonation),
+      value: lastDonationDate ? formatDate(lastDonationDate) : 'No donation yet',
       icon: Calendar,
       color: 'bg-purple-500',
-      description: 'Most recent',
+      description: lastDonationDate ? 'Most recent' : 'Ready to donate',
     },
   ]
 
   // Filter donations by year
-  const filteredDonations = filterYear === 'all' 
-    ? donations 
-    : donations.filter(d => new Date(d.date).getFullYear().toString() === filterYear)
-
-  const availableYears = [...new Set(donations.map(d => new Date(d.date).getFullYear()))].sort((a, b) => b - a)
+  const filteredDonations = donations
+  const availableYears = [...new Set(donations.map(d => new Date(d.donated_at).getFullYear()))].sort((a, b) => b - a)
 
   return (
     <div className="space-y-6">
@@ -125,16 +226,16 @@ const DonorHistory = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 + index * 0.1 }}
             >
-              <Card className="hover:shadow-lg transition-shadow h-full">
+              <Card className="h-full">
                 <CardContent className="p-6 h-full">
                   <div className="flex items-center justify-between h-full">
                     <div className="flex flex-col justify-between h-full">
-                      <p className="text-gray-600 text-sm font-medium">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-800 mt-2">{stat.value}</p>
+                      <p className="text-gray-600 text-xs font-medium">{stat.title}</p>
+                      <p className="text-xl font-bold text-gray-800 mt-1">{stat.value}</p>
                       <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                     </div>
-                    <div className={`${stat.color} p-3 rounded-full text-white flex-shrink-0`}>
-                      <Icon size={24} />
+                    <div className={`${stat.color} p-2 rounded-full text-white flex-shrink-0`}>
+                      <Icon size={20} />
                     </div>
                   </div>
                 </CardContent>
@@ -144,42 +245,74 @@ const DonorHistory = () => {
         })}
       </motion.div>
 
-      {/* Achievement Badge */}
-      {/* <motion.div
+      {/* Next Donation Eligibility */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.3 }}
       >
-        <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-red-500 p-4 rounded-full text-white">
-                <Award size={32} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-800">Hero Donor Badge</h3>
-                <p className="text-gray-600 mt-1">
-                  You&apos;ve made {totalDonations} donations and potentially saved {livesSaved} lives! 
-                  Thank you for your life-saving contributions.
-                </p>
-              </div>
-              <div className="hidden md:block">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-red-600">{totalDonations}</div>
-                  <div className="text-sm text-gray-600">Donations</div>
+        {lastDonationDate ? (
+          (() => {
+            const lastDate = new Date(lastDonationDate)
+            const today = new Date()
+            const daysSinceLastDonation = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24))
+            const daysUntilEligible = Math.max(0, 90 - daysSinceLastDonation)
+            const isEligible = daysSinceLastDonation >= 90
+            const eligibleDate = new Date(lastDate)
+            eligibleDate.setDate(eligibleDate.getDate() + 90)
+
+            return (
+              <Card className={`bg-gradient-to-r ${isEligible ? 'from-green-50 to-teal-50 border-green-200' : 'from-orange-50 to-yellow-50 border-orange-200'}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`${isEligible ? 'bg-green-500' : 'bg-orange-500'} p-4 rounded-full text-white`}>
+                      <Calendar size={32} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
+                      {isEligible ? (
+                        <p className="text-gray-600 mt-1">
+                          <span className="font-semibold text-green-600">You are eligible to donate!</span> It has been {daysSinceLastDonation} days since your last donation.
+                          Stay healthy and keep saving lives!
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 mt-1">
+                          You can donate again in <span className="font-semibold text-orange-600">{daysUntilEligible} days</span> (on {formatDate(eligibleDate.toISOString())}).
+                          You need to wait 90 days between donations.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()
+        ) : (
+          <Card className="bg-gradient-to-r from-green-50 to-teal-50 border-green-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-green-500 p-4 rounded-full text-white">
+                  <Calendar size={32} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
+                  <p className="text-gray-600 mt-1">
+                    <span className="font-semibold text-green-600">You are eligible to donate!</span> No previous donation record found.
+                    Stay healthy and keep saving lives!
+                  </p>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div> */}
+            </CardContent>
+          </Card>
+        )}
+      </motion.div>
 
       {/* Filter Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white p-6 rounded-lg shadow-md"
+        transition={{ delay: 0.4 }}
+        className="bg-white p-6 rounded-lg"
       >
         <div className="flex items-center gap-4">
           <Filter className="text-gray-600" size={20} />
@@ -189,7 +322,7 @@ const DonorHistory = () => {
             </label>
             <Select
               value={filterYear}
-              onChange={(e) => setFilterYear(e.target.value)}
+              onChange={handleYearChange}
               className="max-w-xs"
             >
               <option value="all">All Years</option>
@@ -201,7 +334,7 @@ const DonorHistory = () => {
             </Select>
           </div>
           <div className="text-sm text-gray-600">
-            Showing {filteredDonations.length} of {totalDonations} donations
+            Showing {((currentPage - 1) * perPage) + 1} to {Math.min(currentPage * perPage, totalDonations)} of {totalDonations} donations
           </div>
         </div>
       </motion.div>
@@ -210,52 +343,24 @@ const DonorHistory = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.5 }}
       >
-        <Card>
-          <CardHeader>
+        <Card className="bg-transparent border-0">
+          <CardHeader className="px-0">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="text-black" size={20} />
               Donation Records
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             <DataTable
               data={filteredDonations}
               columns={columns}
-              actions={getActions}
+              customActions={getActions}
+              entriesPerPage={perPage}
               searchable={false}
-              paginationColor="green"
+              paginationColor="gray"
             />
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Next Donation Eligibility */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="bg-gradient-to-r from-green-50 to-teal-50 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-green-500 p-4 rounded-full text-white">
-                <Calendar size={32} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
-                <p className="text-gray-600 mt-1">
-                  You can donate again after 90 days from your last donation. 
-                  Stay healthy and keep saving lives!
-                </p>
-              </div>
-              <div className="hidden md:block">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Schedule Donation
-                </Button>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </motion.div>

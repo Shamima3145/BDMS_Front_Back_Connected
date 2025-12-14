@@ -34,6 +34,7 @@ const AdminLayout = () => {
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/inventory', icon: Database, label: 'Inventory' },
     { path: '/admin/donors', icon: Users, label: 'Donors' },
+    { path: '/admin/donations', icon: Droplet, label: 'Donations' },
     { path: '/admin/manage-users', icon: Book, label: 'Manage Users' },
     { path: '/admin/reports', icon: FileText, label: 'Reports' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
