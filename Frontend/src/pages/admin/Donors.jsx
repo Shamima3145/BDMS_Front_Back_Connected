@@ -69,13 +69,13 @@ const Donors = () => {
     { 
       icon: MessageSquare,
       onClick: () => handleSendSMS(donor), 
-      className: 'bg-blue-500 hover:bg-blue-600 text-white',
+      className: 'bg-blue-500 hover:bg-blue-600 text-white rounded-xl p-2',
       title: 'Send SMS'
     },
     { 
       icon: Mail,
       onClick: () => handleSendEmail(donor), 
-      className: 'bg-green-500 hover:bg-green-600 text-white',
+      className: 'bg-green-500 hover:bg-green-600 text-white rounded-xl p-2',
       title: 'Send Email'
     },
   ]

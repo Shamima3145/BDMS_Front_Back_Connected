@@ -37,15 +37,15 @@ const HospitalLayout = () => {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-bl from-[#E0F2FF] to-[#FFF8E7] overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-l from-[#E0F2FF] to-white flex justify-between items-center px-8 py-3 text-blue-900 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
-          <span className="font-bold text-blue-800 text-xl tracking-wide">
+      <header className="bg-gradient-to-l from-[#E0F2FF] to-white flex justify-between items-center px-4 md:px-8 py-3 text-blue-900 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-8 h-8 md:w-10 md:h-10" />
+          <span className="font-bold text-blue-800 text-lg md:text-xl tracking-wide">
             BLOODBRIDGE
           </span>
         </div>
-        <div className="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
-          <span className="font-semibold text-blue-900">{user?.name || 'User'}</span>
+        <div className="flex items-center gap-2 md:gap-4 bg-white shadow px-3 md:px-5 py-2 rounded-xl">
+          <span className="font-semibold text-blue-900 text-sm md:text-base hidden sm:inline">{user?.name || 'User'}</span>
           <Button
           size="sm"
           className="bg-[#0EA5E9] hover:bg-[#0284C7] flex items-center gap-2 shadow-md"
@@ -57,33 +57,33 @@ const HospitalLayout = () => {
         
       </header>
 
-      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl overflow-hidden">
+      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-none md:rounded-xl overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-52 flex-shrink-0 flex flex-col py-8 bg-[#E0F2FF] border border-[#BAE6FD] shadow-lg rounded-tr-3xl rounded-br-3xl overflow-y-auto">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <p className="font-bold mt-4 text-blue-800">{getHospitalName()}</p>
-            <p className="text-sm text-gray-500">{user?.email || 'hospital@example.com'}</p>
+        <aside className="w-16 md:w-52 flex-shrink-0 flex flex-col py-4 md:py-8 bg-[#E0F2FF] border border-[#BAE6FD] shadow-lg rounded-tr-3xl rounded-br-3xl overflow-y-auto">
+          <div className="mb-4 md:mb-8 flex flex-col items-center text-center px-2">
+            <p className="font-bold mt-4 text-blue-800 text-xs md:text-base hidden md:block">{getHospitalName()}</p>
+            <p className="text-xs text-gray-500 hidden md:block">{user?.email || 'hospital@example.com'}</p>
           </div>
           <nav className="flex flex-col gap-2 text-blue-900 px-2">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 py-2 px-4 rounded-xl transition ${
+                className={`flex items-center justify-center md:justify-start gap-3 py-2 px-2 md:px-4 rounded-xl transition ${
                   isActive(item.path)
                     ? 'bg-white shadow font-bold text-[#0EA5E9]'
                     : 'hover:bg-white/70'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                {item.label}
+                <span className="hidden md:inline">{item.label}</span>
               </Link>
             ))}
           </nav>
         </aside>
 
         {/* Main Content */}
-        <section className="flex-1 py-10 px-10 overflow-y-auto">
+        <section className="flex-1 py-4 px-3 md:py-10 md:px-10 overflow-y-auto">
           <Outlet />
         </section>
       </div>

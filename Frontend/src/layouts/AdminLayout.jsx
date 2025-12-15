@@ -45,16 +45,16 @@ const AdminLayout = () => {
   return (
     <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#FFFAEF] to-primary flex justify-between items-center px-8 py-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-10 h-10" />
-          <span className="font-bold text-primary text-xl tracking-wide">
+      <header className="bg-gradient-to-r from-[#FFFAEF] to-primary flex justify-between items-center px-4 md:px-8 py-3 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <img src="/assets/logo.png" alt="BloodBridge Logo" className="w-8 h-8 md:w-10 md:h-10" />
+          <span className="font-bold text-primary text-lg md:text-xl tracking-wide">
             BLOODBRIDGE  
           </span>
         </div>
 
-        <div className="flex items-center gap-4 bg-white shadow px-5 py-2 rounded-xl">
-          <span className="font-semibold text-primary">{user?.name || 'Admin'}</span>
+        <div className="flex items-center gap-2 md:gap-4 bg-white shadow px-3 md:px-5 py-2 rounded-xl">
+          <span className="font-semibold text-primary text-sm md:text-base hidden sm:inline">{user?.name || 'Admin'}</span>
           <Button
             size="sm"
             className="bg-[#942222] hover:bg-[#ed0000] flex items-center gap-2"
@@ -65,22 +65,22 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-xl overflow-hidden">
+      <div className="flex flex-1 mx-auto w-full bg-white shadow-xl rounded-none md:rounded-xl overflow-hidden">
         {/* Sidebar */}
-        <aside className="bg-primary text-white w-52 flex flex-col py-8 shadow-lg rounded-tr-3xl rounded-br-3xl flex-shrink-0 overflow-y-auto">
+        <aside className="bg-primary text-white w-16 md:w-52 flex flex-col py-4 md:py-8 shadow-lg rounded-tr-3xl rounded-br-3xl flex-shrink-0 overflow-y-auto">
           <nav className="flex flex-col gap-2 text-white px-2">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 py-2 px-4 rounded-xl transition whitespace-nowrap ${
+                className={`flex items-center justify-center md:justify-start gap-3 py-2 px-2 md:px-4 rounded-xl transition whitespace-nowrap ${
                   isActive(item.path)
                     ? 'bg-white/20 font-bold shadow text-[#ffefef]'
                     : 'hover:bg-white/20'
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate hidden md:inline">{item.label}</span>
               </Link>
             ))}
 
@@ -88,11 +88,11 @@ const AdminLayout = () => {
             <div className="relative">
               <button
                 onClick={() => setIsRequestsOpen(!isRequestsOpen)}
-                className="flex items-center justify-between w-full gap-3 py-2 px-4 rounded-xl hover:bg-white/20"
+                className="flex items-center justify-center md:justify-between w-full gap-3 py-2 px-2 md:px-4 rounded-xl hover:bg-white/20"
               >
                 <div className="flex items-center gap-3">
                   <Droplet className="w-5 h-5" />
-                  Requests
+                  <span className="hidden md:inline">Requests</span>
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform ${
@@ -133,7 +133,7 @@ const AdminLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-3 md:p-6 overflow-y-auto">
           <Outlet />
         </div>
       </div>

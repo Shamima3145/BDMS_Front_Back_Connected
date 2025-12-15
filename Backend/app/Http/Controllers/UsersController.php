@@ -263,6 +263,91 @@ class UsersController extends Controller
         return response()->json(['hospitals' => $hospitals]);
     }
 
+    // UPDATE USER (admin)
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $request->validate([
+            'firstname' => 'sometimes|string|max:255',
+            'lastname' => 'sometimes|string|max:255',
+            'bloodgroup' => 'sometimes|string',
+            'gender' => 'sometimes|string',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'contactNumber' => 'sometimes|string',
+            'area' => 'sometimes|string',
+        ]);
+
+        $user->update($request->only(['firstname', 'lastname', 'bloodgroup', 'gender', 'email', 'contactNumber', 'area']));
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user
+        ]);
+    }
+
+    // DELETE USER (admin)
+    public function deleteUser(Request $request, $id)
+    {
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'User deleted successfully']);
+    }
+
+    // UPDATE HOSPITAL (admin)
+    public function updateHospital(Request $request, $id)
+    {
+        $hospital = Hospital::find($id);
+        
+        if (!$hospital) {
+            return response()->json(['message' => 'Hospital not found'], 404);
+        }
+
+        $request->validate([
+            'hospitalName' => 'sometimes|string|max:255',
+            'registrationId' => 'sometimes|string|max:255',
+            'hospitalType' => 'sometimes|string',
+            'yearEstablished' => 'sometimes|integer',
+            'address' => 'sometimes|string',
+            'city' => 'sometimes|string',
+            'district' => 'sometimes|string',
+            'email' => 'sometimes|email|unique:hospitals,email,' . $id,
+            'contactNumber' => 'sometimes|string',
+            'hasBloodBank' => 'sometimes|string',
+        ]);
+
+        $hospital->update($request->only(['hospitalName', 'registrationId', 'hospitalType', 'yearEstablished', 'address', 'city', 'district', 'email', 'contactNumber', 'hasBloodBank']));
+
+        return response()->json([
+            'message' => 'Hospital updated successfully',
+            'hospital' => $hospital
+        ]);
+    }
+
+    // DELETE HOSPITAL (admin)
+    public function deleteHospital(Request $request, $id)
+    {
+        $hospital = Hospital::find($id);
+        
+        if (!$hospital) {
+            return response()->json(['message' => 'Hospital not found'], 404);
+        }
+
+        $hospital->delete();
+
+        return response()->json(['message' => 'Hospital deleted successfully']);
+    }
+
     // UPDATE HOSPITAL PROFILE
     public function updateHospitalProfile(Request $request)
     {
@@ -315,6 +400,7 @@ class UsersController extends Controller
             'blood_group' => 'required|string',
             'units' => 'required|integer|min:1',
             'requested_by' => 'required|string|max:255',
+            'contact' => 'required|string|max:255',
         ]);
 
         $prefix = $request->patient_name ? 'BR' : 'HR';
@@ -329,6 +415,7 @@ class UsersController extends Controller
             'blood_group' => $request->blood_group,
             'units' => $request->units,
             'requested_by' => $request->requested_by,
+            'contact' => $request->contact,
             'status' => 'Pending',
         ]);
 
@@ -340,6 +427,27 @@ class UsersController extends Controller
     {
         $requests = BloodRequest::orderBy('created_at','desc')->get();
         return response()->json(['requests' => $requests]);
+    }
+
+    // UPDATE BLOOD REQUEST STATUS
+    public function updateBloodRequestStatus(Request $request, $id)
+    {
+        $bloodRequest = BloodRequest::find($id);
+        
+        if (!$bloodRequest) {
+            return response()->json(['message' => 'Blood request not found'], 404);
+        }
+
+        $request->validate([
+            'status' => 'required|string|in:pending,accepted,declined,Pending,Accepted,Declined,Accept,Decline',
+        ]);
+
+        $bloodRequest->update(['status' => $request->status]);
+
+        return response()->json([
+            'message' => 'Blood request status updated successfully',
+            'request' => $bloodRequest
+        ]);
     }
 
     // GET HOSPITAL BLOOD REQUESTS

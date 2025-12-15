@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('blood_group');
             $table->integer('units');
             $table->string('requested_by');
+            $table->string('contact');
             $table->string('status');
             $table->timestamps();
         });

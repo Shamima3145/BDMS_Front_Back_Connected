@@ -27,6 +27,7 @@ const bloodRequestSchema = yup.object({
   bloodGroup: yup.string().required('Blood group is required'),
   units: yup.number().min(1, 'At least 1 unit required').required('Units is required'),
   requestedBy: yup.string().required('Requester name is required'),
+  contact: yup.string().required('Contact is required'),
 })
 
 const BloodRequestModal = ({ isOpen, onClose }) => {
@@ -54,6 +55,7 @@ const BloodRequestModal = ({ isOpen, onClose }) => {
         blood_group: data.bloodGroup,
         units: data.units,
         requested_by: data.requestedBy,
+        contact: data.contact,
       })
       toast.success('Blood request submitted successfully!')
       reset()
@@ -197,6 +199,21 @@ const BloodRequestModal = ({ isOpen, onClose }) => {
                       <p className="text-red-500 text-sm mt-1">{errors.requestedBy.message}</p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="contact" className="text-gray-700 font-semibold">
+                    {requestType === 'hospital' ? 'Emergency Contact *' : 'Contact (Phone/Email) *'}
+                  </Label>
+                  <Input
+                    id="contact"
+                    {...register('contact')}
+                    placeholder={requestType === 'hospital' ? 'Enter emergency contact' : 'Enter phone number or email'}
+                    className={`mt-1 ${errors.contact ? 'border-red-500' : ''}`}
+                  />
+                  {errors.contact && (
+                    <p className="text-red-500 text-sm mt-1">{errors.contact.message}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -4,6 +4,7 @@ import DataTable from '@/components/DataTable'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
+import { Check, X } from 'lucide-react'
 
 const HospitalRequests = () => {
   const [hospitalRequestsData, setHospitalRequestsData] = useState([])
@@ -26,6 +27,7 @@ const HospitalRequests = () => {
           hospital: request.hospital_name,
           blood: request.blood_group,
           units: request.units,
+          contact: request.contact,
           by: request.requested_by,
           status: request.status,
         }))
@@ -45,16 +47,75 @@ const HospitalRequests = () => {
     { header: 'Hospital', accessor: 'hospital' },
     { header: 'Blood Group', accessor: 'blood' },
     { header: 'Units', accessor: 'units' },
+    { header: 'Contact', accessor: 'contact' },
     { header: 'Requested By', accessor: 'by' },
     { header: 'Status', accessor: 'status' },
   ]
 
-  const handleAccept = (row) => {
-    toast.success(`Request ${row.id} from ${row.hospital} accepted successfully!`)
+  const handleAccept = async (row) => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/blood-requests', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const request = response.data.requests.find(r => r.request_id === row.id)
+      
+      if (!request) {
+        toast.error('Request not found')
+        return
+      }
+
+      await axios.patch(
+        `http://127.0.0.1:8000/api/blood-requests/${request.id}`,
+        { status: 'Accept' },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      toast.success(`Request ${row.id} from ${row.hospital} accepted successfully!`)
+      
+      // Update local state
+      setHospitalRequestsData(prevData =>
+        prevData.map(item =>
+          item.id === row.id ? { ...item, status: 'Accept' } : item
+        )
+      )
+    } catch (error) {
+      toast.error('Failed to accept request')
+    }
   }
 
-  const handleDecline = (row) => {
-    toast.error(`Request ${row.id} from ${row.hospital} declined!`)
+  const handleDecline = async (row) => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/blood-requests', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const request = response.data.requests.find(r => r.request_id === row.id)
+      
+      if (!request) {
+        toast.error('Request not found')
+        return
+      }
+
+      await axios.patch(
+        `http://127.0.0.1:8000/api/blood-requests/${request.id}`,
+        { status: 'Decline' },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      toast.error(`Request ${row.id} from ${row.hospital} declined!`)
+      
+      // Update local state
+      setHospitalRequestsData(prevData =>
+        prevData.map(item =>
+          item.id === row.id ? { ...item, status: 'declined' } : item
+        )
+      )
+    } catch (error) {
+      toast.error('Failed to decline request')
+    }
   }
 
   return (
@@ -75,9 +136,26 @@ const HospitalRequests = () => {
         <DataTable
           data={hospitalRequestsData}
           columns={columns}
-          showActions={true}
-          onAccept={handleAccept}
-          onDecline={handleDecline}
+          customActions={(row) => {
+            const status = row.status?.toLowerCase()
+            if (status === 'accept' || status === 'decline' || status === 'accepted' || status === 'declined') {
+              return []
+            }
+            return [
+              {
+                icon: () => <Check size={18} />,
+                onClick: () => handleAccept(row),
+                className: 'bg-green-600 hover:bg-green-700 text-white p-2 rounded',
+                title: 'Accept'
+              },
+              {
+                icon: () => <X size={18} />,
+                onClick: () => handleDecline(row),
+                className: 'bg-red-600 hover:bg-red-700 text-white p-2 rounded',
+                title: 'Decline'
+              }
+            ]
+          }}
           searchPlaceholder="Search hospital requests..."
         />
       </motion.div>

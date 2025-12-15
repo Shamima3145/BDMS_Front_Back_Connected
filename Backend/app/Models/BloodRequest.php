@@ -16,6 +16,7 @@ class BloodRequest extends Model
         'blood_group',
         'units',
         'requested_by',
+        'contact',
         'status',
     ];
 }

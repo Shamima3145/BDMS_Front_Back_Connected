@@ -47,6 +47,9 @@ const ManageUsers = () => {
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewModalOpen, setViewModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
 
   const {
     register,
@@ -130,15 +133,71 @@ const ManageUsers = () => {
   }
 
   const handleView = (item) => {
-    toast.info(`Viewing ${userType === 'user' ? 'user' : 'hospital'}: ${item.email}`)
+    setSelectedItem(item)
+    setViewModalOpen(true)
   }
 
   const handleEdit = (item) => {
-    toast.info(`Edit functionality for ${item.email}`)
+    setSelectedItem(item)
+    setEditModalOpen(true)
   }
 
-  const handleDelete = (item) => {
-    toast.warning(`Delete functionality for ${item.email}`)
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Are you sure you want to delete ${item.email}?`)) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const endpoint = userType === 'user' 
+        ? `http://127.0.0.1:8000/api/admin/users/${item.id}`
+        : `http://127.0.0.1:8000/api/admin/hospitals/${item.id}`
+      
+      await axios.delete(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      toast.success(`${userType === 'user' ? 'User' : 'Hospital'} deleted successfully!`)
+      
+      if (userType === 'user') {
+        fetchUsers()
+      } else {
+        fetchHospitals()
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to delete'
+      toast.error(errorMsg)
+    }
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      const endpoint = userType === 'user'
+        ? `http://127.0.0.1:8000/api/admin/users/${selectedItem.id}`
+        : `http://127.0.0.1:8000/api/admin/hospitals/${selectedItem.id}`
+      
+      await axios.put(endpoint, selectedItem, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      toast.success(`${userType === 'user' ? 'User' : 'Hospital'} updated successfully!`)
+      setEditModalOpen(false)
+      
+      if (userType === 'user') {
+        fetchUsers()
+      } else {
+        fetchHospitals()
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to update'
+      toast.error(errorMsg)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const userColumns = [
@@ -205,7 +264,7 @@ const ManageUsers = () => {
             className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary to-red-600 text-white shadow-md flex items-center gap-2 text-sm"
           >
             <UserPlus size={16} />
-            <span>Add Public User</span>
+            <span>  Add  User</span>
           </button>
           <button
             type="button"
@@ -526,6 +585,253 @@ const ManageUsers = () => {
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Adding...' : `Add ${userType === 'user' ? 'User' : 'Hospital'}`}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {viewModalOpen && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
+                <Eye size={20} />
+                View {userType === 'user' ? 'User' : 'Hospital'} Details
+              </h2>
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6">
+              {userType === 'user' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div><span className="font-semibold">ID:</span> {selectedItem.id}</div>
+                  <div><span className="font-semibold">Email:</span> {selectedItem.email}</div>
+                  <div><span className="font-semibold">First Name:</span> {selectedItem.firstname}</div>
+                  <div><span className="font-semibold">Last Name:</span> {selectedItem.lastname}</div>
+                  <div><span className="font-semibold">Blood Group:</span> <span className="text-red-600 font-bold">{selectedItem.bloodgroup}</span></div>
+                  <div><span className="font-semibold">Gender:</span> {selectedItem.gender}</div>
+                  <div><span className="font-semibold">Contact:</span> {selectedItem.contactNumber}</div>
+                  <div><span className="font-semibold">Area:</span> {selectedItem.area}</div>
+                  {selectedItem.lastDonationDate && (
+                    <div className="col-span-2"><span className="font-semibold">Last Donation:</span> {new Date(selectedItem.lastDonationDate).toLocaleDateString()}</div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div><span className="font-semibold">Hospital Name:</span> {selectedItem.hospitalName}</div>
+                  <div><span className="font-semibold">Email:</span> {selectedItem.email}</div>
+                  <div><span className="font-semibold">Registration ID:</span> {selectedItem.registrationId}</div>
+                  <div><span className="font-semibold">Type:</span> {selectedItem.hospitalType}</div>
+                  <div><span className="font-semibold">Year Established:</span> {selectedItem.yearEstablished}</div>
+                  <div><span className="font-semibold">City:</span> {selectedItem.city}</div>
+                  <div><span className="font-semibold">District:</span> {selectedItem.district}</div>
+                  <div><span className="font-semibold">Contact:</span> {selectedItem.contactNumber}</div>
+                  <div className="col-span-2"><span className="font-semibold">Address:</span> {selectedItem.address}</div>
+                  <div><span className="font-semibold">Blood Bank:</span> {selectedItem.hasBloodBank}</div>
+                </div>
+              )}
+              <div className="flex justify-end mt-6">
+                <Button onClick={() => setViewModalOpen(false)}>Close</Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editModalOpen && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-green-600 flex items-center gap-2">
+                <Edit size={20} />
+                Edit {userType === 'user' ? 'User' : 'Hospital'}
+              </h2>
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                {userType === 'user' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>First Name</Label>
+                      <Input
+                        value={selectedItem.firstname || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, firstname: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Last Name</Label>
+                      <Input
+                        value={selectedItem.lastname || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, lastname: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={selectedItem.email || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Contact Number</Label>
+                      <Input
+                        value={selectedItem.contactNumber || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, contactNumber: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Blood Group</Label>
+                      <Select
+                        value={selectedItem.bloodgroup || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, bloodgroup: e.target.value})}
+                      >
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Gender</Label>
+                      <Select
+                        value={selectedItem.gender || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, gender: e.target.value})}
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Area</Label>
+                      <Input
+                        value={selectedItem.area || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, area: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Hospital Name</Label>
+                      <Input
+                        value={selectedItem.hospitalName || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, hospitalName: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Registration ID</Label>
+                      <Input
+                        value={selectedItem.registrationId || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, registrationId: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Hospital Type</Label>
+                      <Select
+                        value={selectedItem.hospitalType || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, hospitalType: e.target.value})}
+                      >
+                        <option value="Government">Government</option>
+                        <option value="Private">Private</option>
+                        <option value="Semi-Government">Semi-Government</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Year Established</Label>
+                      <Input
+                        type="number"
+                        value={selectedItem.yearEstablished || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, yearEstablished: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Address</Label>
+                      <Input
+                        value={selectedItem.address || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, address: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>City</Label>
+                      <Input
+                        value={selectedItem.city || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, city: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>District</Label>
+                      <Input
+                        value={selectedItem.district || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, district: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={selectedItem.email || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Contact Number</Label>
+                      <Input
+                        value={selectedItem.contactNumber || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, contactNumber: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Has Blood Bank</Label>
+                      <Select
+                        value={selectedItem.hasBloodBank || ''}
+                        onChange={(e) => setSelectedItem({...selectedItem, hasBloodBank: e.target.value})}
+                      >
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-3 justify-end pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditModalOpen(false)}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
               </form>

@@ -3,6 +3,7 @@ import { getStatusColor } from '@/utils/constants'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
 import { Select } from './ui/Select'
+import { Check, X } from 'lucide-react'
 
 const DataTable = ({
   data,
@@ -43,8 +44,8 @@ const DataTable = ({
   }
 
   return (
-    <div className="w-full">
-      <table className="w-full table-fixed">
+    <div className="w-full overflow-x-auto">
+      <table className="w-full table-fixed min-w-[640px]">
         <thead className="bg-gray-50">
           <tr>
               {columns.map((col, idx) => (
@@ -116,17 +117,20 @@ const DataTable = ({
                     <Button
                       size="sm"
                       variant="default"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 p-2"
                       onClick={() => onAccept && onAccept(row)}
+                      title="Accept"
                     >
-                      Accept
+                      <Check size={18} />
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
+                      className="p-2"
                       onClick={() => onDecline && onDecline(row)}
+                      title="Decline"
                     >
-                      Decline
+                      <X size={18} />
                     </Button>
                   </td>
                 )}
@@ -139,7 +143,7 @@ const DataTable = ({
                           <button
                             key={idx}
                             onClick={action.onClick}
-                            className={action.className || 'p-2 bg-gray-500 hover:bg-gray-600 text-white rounded'}
+                            className={action.className || 'p-2 bg-gray-500 hover:bg-gray-600 text-white rounded-xl'}
                             title={action.title || action.label}
                             disabled={action.disabled}
                           >
@@ -155,15 +159,15 @@ const DataTable = ({
           </tbody>
         </table>
 
-      <div className="flex justify-between items-center mt-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
           <p className="text-sm text-gray-600">
             Showing {startIndex + 1} to{' '}
             {Math.min(startIndex + entriesPerPage, filteredData.length)} of{' '}
             {filteredData.length} entries
           </p>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Show</span>
+            <span className="text-sm text-gray-600 hidden sm:inline">Show</span>
             <Select
               className="w-20  border border-gray-300 hover:border-gray-400 rounded"
               value={entriesPerPage}
@@ -174,15 +178,16 @@ const DataTable = ({
               <option value={25}>25</option>
               <option value={50}>50</option>
             </Select>
-            <span className="text-sm text-gray-600">entries</span>
+            <span className="text-sm text-gray-600 hidden sm:inline">entries</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             size="sm"
             variant="outline"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
+            className="text-xs md:text-sm"
           >
             Prev
           </Button>
@@ -192,7 +197,7 @@ const DataTable = ({
               size="sm"
               variant={currentPage === page ? 'default' : 'outline'}
               onClick={() => setCurrentPage(page)}
-              className={currentPage === page ? 'bg-gray-600 hover:bg-gray-700' : ''}
+              className={`text-xs md:text-sm ${currentPage === page ? 'bg-gray-600 hover:bg-gray-700' : ''}`}
             >
               {page}
             </Button>
@@ -202,6 +207,7 @@ const DataTable = ({
             variant="outline"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
+            className="text-xs md:text-sm"
           >
             Next
           </Button>

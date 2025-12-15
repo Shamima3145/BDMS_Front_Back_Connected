@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-const DonorHistory = () => {
+const DonationHistory = () => {
   const [filterYear, setFilterYear] = useState('all')
   const [donations, setDonations] = useState([])
   const [lastDonationDate, setLastDonationDate] = useState(null)
@@ -97,31 +97,15 @@ const DonorHistory = () => {
     setCurrentPage(1) // Reset to first page
   }
 
+  const trackData = []
+
   const columns = [
-    { header: 'Donation ID', accessor: 'id' },
-    { 
-      header: 'Date & Time', 
-      accessor: 'donated_at',
-      render: (value) => {
-        const date = new Date(value)
-        const dateStr = date.toLocaleDateString('en-GB', { 
-          day: '2-digit', 
-          month: 'short', 
-          year: 'numeric' 
-        })
-        const timeStr = date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: true 
-        })
-        return `${dateStr}|${timeStr}`
-      }
-    },
-    { header: 'Blood Group', accessor: 'blood_group' },
-    { header: 'Units Donated', accessor: 'units' },
-    { header: 'Donation Type', accessor: 'type' },
-    { header: 'Donation Center', accessor: 'center_name' },
+    { header: 'Donation ID', accessor: 'id', className: 'font-semibold' },
+    { header: 'Blood Group', accessor: 'blood' },
+    { header: 'Units', accessor: 'units' },
+    { header: 'Center', accessor: 'center' },
     { header: 'Status', accessor: 'status' },
+    { header: 'Completion', accessor: 'completion' },
   ]
 
   const handleDownloadCertificate = (donation) => {
@@ -201,12 +185,13 @@ const DonorHistory = () => {
         className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">My Donation History</h1>
-          <p className="text-gray-600 mt-1">Track your life-saving contributions</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">My Donation History</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1">Track your life-saving contributions</p>
         </div>
-        <Button onClick={handleExportHistory} className="bg-green-800 hover:bg-green-500 flex items-center gap-2">
-          <Download size={18} />
-          Export History
+        <Button onClick={handleExportHistory} className="bg-green-800 hover:bg-green-500 flex items-center gap-2 text-sm md:text-base whitespace-nowrap">
+          <Download size={16} className="md:w-[18px] md:h-[18px]" />
+          <span className="hidden sm:inline">Export History</span>
+          <span className="sm:hidden">Export</span>
         </Button>
       </motion.div>
 
@@ -263,20 +248,20 @@ const DonorHistory = () => {
 
             return (
               <Card className={`bg-gradient-to-r ${isEligible ? 'from-green-50 to-teal-50 border-green-200' : 'from-orange-50 to-yellow-50 border-orange-200'}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className={`${isEligible ? 'bg-green-500' : 'bg-orange-500'} p-4 rounded-full text-white`}>
-                      <Calendar size={32} />
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className={`${isEligible ? 'bg-green-500' : 'bg-orange-500'} p-3 md:p-4 rounded-full text-white flex-shrink-0`}>
+                      <Calendar size={24} className="md:w-8 md:h-8" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
+                      <h3 className="text-lg md:text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
                       {isEligible ? (
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-sm md:text-base text-gray-600 mt-1">
                           <span className="font-semibold text-green-600">You are eligible to donate!</span> It has been {daysSinceLastDonation} days since your last donation.
                           Stay healthy and keep saving lives!
                         </p>
                       ) : (
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-sm md:text-base text-gray-600 mt-1">
                           You can donate again in <span className="font-semibold text-orange-600">{daysUntilEligible} days</span> (on {formatDate(eligibleDate.toISOString())}).
                           You need to wait 90 days between donations.
                         </p>
@@ -289,14 +274,14 @@ const DonorHistory = () => {
           })()
         ) : (
           <Card className="bg-gradient-to-r from-green-50 to-teal-50 border-green-200">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-green-500 p-4 rounded-full text-white">
-                  <Calendar size={32} />
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="bg-green-500 p-3 md:p-4 rounded-full text-white flex-shrink-0">
+                  <Calendar size={24} className="md:w-8 md:h-8" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
-                  <p className="text-gray-600 mt-1">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-800">Next Donation Eligibility</h3>
+                  <p className="text-sm md:text-base text-gray-600 mt-1">
                     <span className="font-semibold text-green-600">You are eligible to donate!</span> No previous donation record found.
                     Stay healthy and keep saving lives!
                   </p>
@@ -307,65 +292,21 @@ const DonorHistory = () => {
         )}
       </motion.div>
 
-      {/* Filter Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white p-6 rounded-lg"
-      >
-        <div className="flex items-center gap-4">
-          <Filter className="text-gray-600" size={20} />
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Year
-            </label>
-            <Select
-              value={filterYear}
-              onChange={handleYearChange}
-              className="max-w-xs"
-            >
-              <option value="all">All Years</option>
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="text-sm text-gray-600">
-            Showing {((currentPage - 1) * perPage) + 1} to {Math.min(currentPage * perPage, totalDonations)} of {totalDonations} donations
-          </div>
-        </div>
-      </motion.div>
-
       {/* Donation History Table */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
       >
-        <Card className="bg-transparent border-0">
-          <CardHeader className="px-0">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="text-black" size={20} />
-              Donation Records
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <DataTable
-              data={filteredDonations}
-              columns={columns}
-              customActions={getActions}
-              entriesPerPage={perPage}
-              searchable={false}
-              paginationColor="gray"
-            />
-          </CardContent>
-        </Card>
+        <DataTable
+          data={trackData}
+          columns={columns}
+          searchPlaceholder="Search donations..."
+          paginationColor="green"
+        />
       </motion.div>
     </div>
   )
 }
 
-export default DonorHistory
+export default DonationHistory

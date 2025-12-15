@@ -22,7 +22,11 @@ Route::post('/forgot-password', [UsersController::class, 'forgotPassword'])->nam
 
 // Admin Routes (accessible with static token)
 Route::get('/admin/users', [UsersController::class, 'getAllUsers']);
+Route::put('/admin/users/{id}', [UsersController::class, 'updateUser']);
+Route::delete('/admin/users/{id}', [UsersController::class, 'deleteUser']);
 Route::get('/admin/hospitals', [UsersController::class, 'getAllHospitals']);
+Route::put('/admin/hospitals/{id}', [UsersController::class, 'updateHospital']);
+Route::delete('/admin/hospitals/{id}', [UsersController::class, 'deleteHospital']);
 Route::get('/admin/blood-inventory', [UsersController::class, 'getTotalBloodInventory']);
 Route::get('/admin/dashboard-stats', [UsersController::class, 'getDashboardStats']);
 Route::post('/admin/add', [UsersController::class, 'addAdmin']);
@@ -36,6 +40,7 @@ Route::patch('/admin/donations/{id}', [UsersController::class, 'updateDonation']
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);
+Route::patch('/blood-requests/{id}', [UsersController::class, 'updateBloodRequestStatus']);
 Route::get('/hospital/blood-requests', [UsersController::class, 'getHospitalBloodRequests']);
 
 // BLOOD BANK ROUTES
