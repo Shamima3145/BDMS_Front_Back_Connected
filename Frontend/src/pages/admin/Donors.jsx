@@ -8,6 +8,9 @@ import { Input } from '@components/ui/Input'
 import { Select } from '@components/ui/Select'
 import { bloodGroups } from '@utils/constants'
 import { toast } from 'react-toastify'
+import { pdf } from '@react-pdf/renderer'
+import DonorListPDF from '@components/pdf/DonorListPDF'
+import PDFPreviewModal from '@components/modals/PDFPreviewModal'
 
 const Donors = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -15,6 +18,11 @@ const Donors = () => {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [donors, setDonors] = useState([])
   const [loading, setLoading] = useState(true)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [showPDFModal, setShowPDFModal] = useState(false)
+  const [pdfDocument, setPdfDocument] = useState(null)
+  const [pdfFileName, setPdfFileName] = useState('')
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Use token from localStorage (saved after login)
   const token = localStorage.getItem('token')
@@ -61,8 +69,82 @@ const Donors = () => {
     toast.success(`Email sent to ${donor.firstname} ${donor.lastname} at ${donor.email}`)
   }
 
-  const handleExport = () => {
-    toast.success('Donor list exported successfully!')
+  const handleExport = async () => {
+    try {
+      setExportLoading(true)
+      toast.info('Preparing PDF preview...')
+
+      if (filteredDonors.length === 0) {
+        toast.warning('No donors to export')
+        setExportLoading(false)
+        return
+      }
+
+      const totalDonors = donors.length
+      const eligibleDonors = donors.filter((d) => {
+        if (!d.lastDonationDate) return true
+        const last = new Date(d.lastDonationDate)
+        const today = new Date()
+        const months = (today - last) / (1000 * 60 * 60 * 24 * 30)
+        return months >= 4
+      }).length
+      const uniqueBloodGroups = new Set(donors.map((d) => d.bloodgroup)).size
+
+      // Determine filter applied
+      let filterApplied = ''
+      if (selectedBloodGroup !== 'all') filterApplied += `Blood Group: ${selectedBloodGroup}`
+      if (selectedStatus !== 'all') filterApplied += (filterApplied ? ', ' : '') + `Status: ${selectedStatus}`
+      if (searchQuery) filterApplied += (filterApplied ? ', ' : '') + `Search: ${searchQuery}`
+
+      const pdfDoc = (
+        <DonorListPDF
+          donors={filteredDonors}
+          totalDonors={totalDonors}
+          eligibleDonors={eligibleDonors}
+          bloodGroups={uniqueBloodGroups}
+          filterApplied={filterApplied || 'None'}
+        />
+      )
+
+      setPdfDocument(pdfDoc)
+      setPdfFileName(`donor-list-${new Date().toISOString().split('T')[0]}.pdf`)
+      setShowPDFModal(true)
+      toast.success('PDF preview ready!')
+    } catch (error) {
+      console.error('Error preparing PDF:', error)
+      toast.error('Failed to prepare PDF preview')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true)
+      toast.info('Downloading PDF...')
+
+      const blob = await pdf(pdfDocument).toBlob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = pdfFileName
+      link.click()
+      URL.revokeObjectURL(url)
+
+      toast.success('PDF downloaded successfully!')
+      setShowPDFModal(false)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleClosePDFModal = () => {
+    setShowPDFModal(false)
+    setPdfDocument(null)
+    setPdfFileName('')
   }
 
   const getActions = (donor) => [
@@ -144,9 +226,13 @@ const Donors = () => {
         className="flex justify-between items-center"
       >
         <h1 className="text-3xl font-bold text-gray-800">Donor Management</h1>
-        <Button onClick={handleExport} className="flex items-center gap-2">
+        <Button 
+          onClick={handleExport} 
+          disabled={exportLoading}
+          className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Download size={18} />
-          Export List
+          {exportLoading ? 'Preparing...' : 'Export List'}
         </Button>
       </motion.div>
 
@@ -248,6 +334,16 @@ const Donors = () => {
           />
         )}
       </motion.div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        isOpen={showPDFModal}
+        onClose={handleClosePDFModal}
+        pdfDocument={pdfDocument}
+        fileName={pdfFileName}
+        onDownload={handleDownloadPDF}
+        isDownloading={isDownloading}
+      />
     </div>
   )
 }

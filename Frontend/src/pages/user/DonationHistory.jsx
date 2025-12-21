@@ -9,6 +9,9 @@ import { formatDate } from '@utils/helpers'
 import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
+import { pdf } from '@react-pdf/renderer'
+import DonationHistoryPDF from '@components/pdf/DonationHistoryPDF'
+import PDFPreviewModal from '@components/modals/PDFPreviewModal'
 
 const DonationHistory = () => {
   const [filterYear, setFilterYear] = useState('all')
@@ -19,6 +22,11 @@ const DonationHistory = () => {
   const [perPage, setPerPage] = useState(5)
   const [totalDonations, setTotalDonations] = useState(0)
   const [lastPage, setLastPage] = useState(1)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [showPDFModal, setShowPDFModal] = useState(false)
+  const [pdfDocument, setPdfDocument] = useState(null)
+  const [pdfFileName, setPdfFileName] = useState('')
+  const [isDownloading, setIsDownloading] = useState(false)
   const user = useSelector((state) => state.auth.user)
 
   // Fetch donations from API
@@ -116,8 +124,101 @@ const DonationHistory = () => {
     toast.info(`Viewing details for donation ${donation.id}`)
   }
 
-  const handleExportHistory = () => {
-    toast.success('Donation history exported successfully!')
+  const handleExportHistory = async () => {
+    try {
+      setExportLoading(true)
+      toast.info('Preparing PDF preview...')
+
+      // Fetch ALL donations (not paginated) for export
+      const token = localStorage.getItem('token')
+      const params = new URLSearchParams()
+      
+      if (filterYear && filterYear !== 'all') {
+        params.append('year', filterYear)
+      }
+
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/user/donations?${params.toString()}&all=true`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      const allDonations = response.data.data || []
+
+      if (allDonations.length === 0) {
+        toast.warning('No donation records to export')
+        setExportLoading(false)
+        return
+      }
+
+      // Get user info
+      const userName = user?.firstname && user?.lastname 
+        ? `${user.firstname} ${user.lastname}` 
+        : 'N/A'
+      const userEmail = user?.email || 'N/A'
+
+      // Generate PDF document
+      const pdfDoc = (
+        <DonationHistoryPDF
+          donations={allDonations}
+          userName={userName}
+          userEmail={userEmail}
+          totalDonations={totalDonations}
+          filterYear={filterYear}
+        />
+      )
+
+      // Set the PDF document and filename
+      setPdfDocument(pdfDoc)
+      const fileName = filterYear && filterYear !== 'all'
+        ? `donation-history-${filterYear}.pdf`
+        : `donation-history-${new Date().getFullYear()}.pdf`
+      setPdfFileName(fileName)
+
+      // Show the preview modal
+      setShowPDFModal(true)
+      toast.success('PDF preview ready!')
+    } catch (error) {
+      console.error('Error preparing PDF:', error)
+      toast.error('Failed to prepare PDF preview')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true)
+      toast.info('Downloading PDF...')
+
+      // Generate blob from PDF document
+      const blob = await pdf(pdfDocument).toBlob()
+
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = pdfFileName
+      link.click()
+
+      // Cleanup
+      URL.revokeObjectURL(url)
+
+      toast.success('PDF downloaded successfully!')
+      setShowPDFModal(false)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleClosePDFModal = () => {
+    setShowPDFModal(false)
+    setPdfDocument(null)
+    setPdfFileName('')
   }
 
   const getActions = (donation) => [
@@ -188,10 +289,14 @@ const DonationHistory = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">My Donation History</h1>
           <p className="text-sm md:text-base text-gray-600 mt-1">Track your life-saving contributions</p>
         </div>
-        <Button onClick={handleExportHistory} className="bg-green-800 hover:bg-green-500 flex items-center gap-2 text-sm md:text-base whitespace-nowrap">
+        <Button 
+          onClick={handleExportHistory} 
+          disabled={exportLoading}
+          className="bg-green-800 hover:bg-green-500 flex items-center gap-2 text-sm md:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Download size={16} className="md:w-[18px] md:h-[18px]" />
-          <span className="hidden sm:inline">Export History</span>
-          <span className="sm:hidden">Export</span>
+          <span className="hidden sm:inline">{exportLoading ? 'Preparing...' : 'Export History'}</span>
+          <span className="sm:hidden">{exportLoading ? '...' : 'Export'}</span>
         </Button>
       </motion.div>
 
@@ -305,6 +410,16 @@ const DonationHistory = () => {
           paginationColor="green"
         />
       </motion.div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        isOpen={showPDFModal}
+        onClose={handleClosePDFModal}
+        pdfDocument={pdfDocument}
+        fileName={pdfFileName}
+        onDownload={handleDownloadPDF}
+        isDownloading={isDownloading}
+      />
     </div>
   )
 }

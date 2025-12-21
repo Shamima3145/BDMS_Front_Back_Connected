@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Download, TrendingUp, Users, Droplet, Calendar, FileText, BarChart3, PieChart } from 'lucide-react'
 import { Button } from '@components/ui/Button'
@@ -6,27 +6,130 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@comp
 import { Select } from '@components/ui/Select'
 import { bloodGroups } from '@utils/constants'
 import { toast } from 'react-toastify'
+import api from '@utils/api'
+import { pdf } from '@react-pdf/renderer'
+import ReportsAnalyticsPDF from '@components/pdf/ReportsAnalyticsPDF'
+import PDFPreviewModal from '@components/modals/PDFPreviewModal'
 
 const Reports = () => {
   const [reportType, setReportType] = useState('monthly')
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
   const [selectedYear] = useState(new Date().getFullYear())
+  const [loading, setLoading] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [showPDFModal, setShowPDFModal] = useState(false)
+  const [pdfDocument, setPdfDocument] = useState(null)
+  const [pdfFileName, setPdfFileName] = useState('')
+  const [isDownloading, setIsDownloading] = useState(false)
 
-  const monthlyStats = {
+  const [monthlyStats, setMonthlyStats] = useState({
     totalDonations: 0,
     newDonors: 0,
     bloodCollected: 0,
     requestsFulfilled: 0,
-    topBloodGroup: '-',
-    growth: '0%',
-  }
+    donationsGrowth: '0%',
+    donorsGrowth: '0%',
+    bloodGrowth: '0%',
+    requestsGrowth: '0%',
+  })
 
-  const bloodGroupDistribution = []
-  const topDonors = []
+  const [bloodGroupDistribution, setBloodGroupDistribution] = useState([])
   const monthlyTrends = []
 
-  const handleExportPDF = () => {
-    toast.success('Report exported as PDF successfully!')
+  // Fetch reports statistics
+  useEffect(() => {
+    const fetchReportsStats = async () => {
+      try {
+        setLoading(true)
+        const response = await api.get('/admin/reports-stats', {
+          params: {
+            month: selectedMonth,
+            year: selectedYear,
+          },
+        })
+        
+        console.log('API Response:', response.data)
+        const data = response.data?.data
+        
+        if (data) {
+          setMonthlyStats({
+            totalDonations: data.totalDonations || 0,
+            newDonors: data.newDonors || 0,
+            bloodCollected: data.bloodCollected || 0,
+            requestsFulfilled: data.requestsFulfilled || 0,
+            donationsGrowth: data.donationsGrowth || '0%',
+            donorsGrowth: data.donorsGrowth || '0%',
+            bloodGrowth: data.bloodGrowth || '0%',
+            requestsGrowth: data.requestsGrowth || '0%',
+          })
+          setBloodGroupDistribution(data.bloodGroupDistribution || [])
+        }
+      } catch (error) {
+        console.error('Error fetching reports stats:', error)
+        console.error('Error details:', error.response?.data)
+        toast.error('Failed to fetch reports statistics')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReportsStats()
+  }, [selectedMonth, selectedYear])
+
+  const handleExportPDF = async () => {
+    try {
+      setExportLoading(true)
+      toast.info('Preparing PDF preview...')
+
+      const pdfDoc = (
+        <ReportsAnalyticsPDF
+          monthlyStats={monthlyStats}
+          bloodGroupDistribution={bloodGroupDistribution}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+        />
+      )
+
+      setPdfDocument(pdfDoc)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      setPdfFileName(`reports-analytics-${months[selectedMonth - 1]}-${selectedYear}.pdf`)
+      setShowPDFModal(true)
+      toast.success('PDF preview ready!')
+    } catch (error) {
+      console.error('Error preparing PDF:', error)
+      toast.error('Failed to prepare PDF preview')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true)
+      toast.info('Downloading PDF...')
+
+      const blob = await pdf(pdfDocument).toBlob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = pdfFileName
+      link.click()
+      URL.revokeObjectURL(url)
+
+      toast.success('PDF downloaded successfully!')
+      setShowPDFModal(false)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleClosePDFModal = () => {
+    setShowPDFModal(false)
+    setPdfDocument(null)
+    setPdfFileName('')
   }
 
   const handleExportExcel = () => {
@@ -43,7 +146,7 @@ const Reports = () => {
       value: monthlyStats.totalDonations,
       icon: Droplet,
       color: 'bg-red-500',
-      change: monthlyStats.growth,
+      change: monthlyStats.donationsGrowth,
       changeType: 'increase',
     },
     {
@@ -51,15 +154,15 @@ const Reports = () => {
       value: monthlyStats.newDonors,
       icon: Users,
       color: 'bg-blue-500',
-      change: '+18%',
+      change: monthlyStats.donorsGrowth,
       changeType: 'increase',
     },
     {
       title: 'Blood Collected',
-      value: `${(monthlyStats.bloodCollected / 1000).toFixed(1)}L`,
+      value: `${(monthlyStats.bloodCollected * 0.45).toFixed(1)}L`,
       icon: BarChart3,
       color: 'bg-green-500',
-      change: '+8%',
+      change: monthlyStats.bloodGrowth,
       changeType: 'increase',
     },
     {
@@ -67,7 +170,7 @@ const Reports = () => {
       value: monthlyStats.requestsFulfilled,
       icon: FileText,
       color: 'bg-purple-500',
-      change: '+15%',
+      change: monthlyStats.requestsGrowth,
       changeType: 'increase',
     },
   ]
@@ -98,9 +201,13 @@ const Reports = () => {
             <Download size={18} className="mr-2" />
             Excel
           </Button>
-          <Button onClick={handleExportPDF}>
+          <Button 
+            onClick={handleExportPDF}
+            disabled={exportLoading}
+            className="disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Download size={18} className="mr-2" />
-            Export PDF
+            {exportLoading ? 'Preparing...' : 'Export PDF'}
           </Button>
         </div>
       </motion.div>
@@ -131,7 +238,7 @@ const Reports = () => {
             </label>
             <Select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))}>
               {months.map((month, index) => (
-                <option key={month} value={index}>
+                <option key={month} value={index + 1}>
                   {month}
                 </option>
               ))}
@@ -187,24 +294,26 @@ const Reports = () => {
         })}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Blood Group Distribution */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="text-primary" size={20} />
-                Blood Group Distribution
-              </CardTitle>
-              <CardDescription>Donations by blood group this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {bloodGroupDistribution.map((item, index) => (
+      {/* Blood Group Distribution */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="text-primary" size={20} />
+              Blood Group Distribution
+            </CardTitle>
+            <CardDescription>Donations by blood group this month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {bloodGroupDistribution.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No data available for this month</p>
+              ) : (
+                bloodGroupDistribution.map((item, index) => (
                   <motion.div
                     key={item.group}
                     initial={{ opacity: 0, x: -20 }}
@@ -218,7 +327,7 @@ const Reports = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-700">{item.donations} donations</span>
+                          <span className="text-sm font-medium text-gray-700">{item.donations} donations ({item.units} units)</span>
                           <span className="text-sm text-gray-500">{item.percentage}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -232,56 +341,12 @@ const Reports = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Top Donors */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="text-primary" size={20} />
-                Top Donors
-              </CardTitle>
-              <CardDescription>Most active donors this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topDonors.map((donor, index) => (
-                  <motion.div
-                    key={donor.name}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="font-bold text-primary">{index + 1}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800">{donor.name}</p>
-                        <p className="text-sm text-gray-500">{donor.bloodGroup}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-800">{donor.donations}</p>
-                      <p className="text-xs text-gray-500">donations</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Monthly Trends */}
       <motion.div
@@ -331,6 +396,16 @@ const Reports = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        isOpen={showPDFModal}
+        onClose={handleClosePDFModal}
+        pdfDocument={pdfDocument}
+        fileName={pdfFileName}
+        onDownload={handleDownloadPDF}
+        isDownloading={isDownloading}
+      />
     </div>
   )
 }

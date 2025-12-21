@@ -29,6 +29,7 @@ Route::put('/admin/hospitals/{id}', [UsersController::class, 'updateHospital']);
 Route::delete('/admin/hospitals/{id}', [UsersController::class, 'deleteHospital']);
 Route::get('/admin/blood-inventory', [UsersController::class, 'getTotalBloodInventory']);
 Route::get('/admin/dashboard-stats', [UsersController::class, 'getDashboardStats']);
+Route::get('/admin/reports-stats', [UsersController::class, 'getReportsStats']);
 Route::post('/admin/add', [UsersController::class, 'addAdmin']);
 Route::post('/admin/change-password', [UsersController::class, 'changeAdminPassword']);
 

@@ -695,6 +695,7 @@ class UsersController extends Controller
 
         $perPage = $request->query('per_page', 5);
         $year = $request->query('year');
+        $all = $request->query('all', false); // New parameter for fetching all records
 
         $query = Donation::where('user_id', $user->id)
             ->orderBy('donated_at', 'desc');
@@ -704,6 +705,17 @@ class UsersController extends Controller
             $query->whereYear('donated_at', $year);
         }
 
+        // If 'all' parameter is true, return all records without pagination
+        if ($all === 'true' || $all === true) {
+            $donations = $query->get();
+            
+            return response()->json([
+                'data' => $donations,
+                'total' => $donations->count(),
+            ]);
+        }
+
+        // Otherwise, return paginated results
         $donations = $query->paginate($perPage);
 
         return response()->json([
@@ -851,6 +863,86 @@ class UsersController extends Controller
         return response()->json([
             'message' => 'Donation updated successfully',
             'donation' => $donation,
+        ]);
+    }
+
+    // GET REPORTS STATISTICS
+    public function getReportsStats(Request $request)
+    {
+        $selectedMonth = $request->input('month', now()->month);
+        $selectedYear = $request->input('year', now()->year);
+
+        // Calculate current and last month dates
+        $currentMonthStart = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
+        $currentMonthEnd = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->endOfMonth();
+        
+        $lastMonthStart = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->subMonth()->startOfMonth();
+        $lastMonthEnd = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->subMonth()->endOfMonth();
+
+        // 1. Total Donations (current month - only Completed status)
+        $currentDonations = Donation::where('status', 'Completed')
+            ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+            ->count();
+        $lastDonations = Donation::where('status', 'Completed')
+            ->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])
+            ->count();
+        $donationsGrowth = $lastDonations > 0 ? round((($currentDonations - $lastDonations) / $lastDonations) * 100) : 0;
+
+        // 2. New Donors (comparing registration dates)
+        $currentDonors = User::whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])->count();
+        $lastDonors = User::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count();
+        $donorsGrowth = $lastDonors > 0 ? round((($currentDonors - $lastDonors) / $lastDonors) * 100) : 0;
+
+        // 3. Blood Collected (units from donations table)
+        $currentBloodUnits = Donation::whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])->sum('units');
+        $lastBloodUnits = Donation::whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->sum('units');
+        $bloodGrowth = $lastBloodUnits > 0 ? round((($currentBloodUnits - $lastBloodUnits) / $lastBloodUnits) * 100) : 0;
+
+        // 4. Requests Fulfilled (status = accepted from blood_requests table)
+        $currentRequests = BloodRequest::where('status', 'accepted')
+            ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+            ->count();
+        $lastRequests = BloodRequest::where('status', 'accepted')
+            ->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])
+            ->count();
+        $requestsGrowth = $lastRequests > 0 ? round((($currentRequests - $lastRequests) / $lastRequests) * 100) : 0;
+
+        // 5. Blood Group Distribution from donations table (current month)
+        $bloodGroupStats = Donation::selectRaw('blood_group, SUM(units) as total_units, COUNT(*) as total_donations')
+            ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+            ->groupBy('blood_group')
+            ->get();
+
+        $totalUnits = $bloodGroupStats->sum('total_units');
+        $bloodGroupDistribution = [];
+
+        foreach ($bloodGroupStats as $stat) {
+            $percentage = $totalUnits > 0 ? round(($stat->total_units / $totalUnits) * 100, 1) : 0;
+            $bloodGroupDistribution[] = [
+                'group' => $stat->blood_group,
+                'donations' => $stat->total_donations,
+                'units' => $stat->total_units,
+                'percentage' => $percentage,
+            ];
+        }
+
+        // Sort by units descending
+        usort($bloodGroupDistribution, function($a, $b) {
+            return $b['units'] - $a['units'];
+        });
+
+        return response()->json([
+            'data' => [
+                'totalDonations' => $currentDonations,
+                'donationsGrowth' => ($donationsGrowth >= 0 ? '+' : '') . $donationsGrowth . '%',
+                'newDonors' => $currentDonors,
+                'donorsGrowth' => ($donorsGrowth >= 0 ? '+' : '') . $donorsGrowth . '%',
+                'bloodCollected' => $currentBloodUnits, // in units
+                'bloodGrowth' => ($bloodGrowth >= 0 ? '+' : '') . $bloodGrowth . '%',
+                'requestsFulfilled' => $currentRequests,
+                'requestsGrowth' => ($requestsGrowth >= 0 ? '+' : '') . $requestsGrowth . '%',
+                'bloodGroupDistribution' => $bloodGroupDistribution,
+            ]
         ]);
     }
 }
