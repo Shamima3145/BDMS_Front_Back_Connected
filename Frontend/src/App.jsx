@@ -20,7 +20,7 @@ import Settings from '@/pages/admin/Settings'
 import ManageUsers from '@/pages/admin/ManageUsers'
 import Donations from '@/pages/admin/Donations'
 import UserDashboard from '@/pages/user/UserDashboard'
-import DonorHistory from '@/pages/user/DonationHistory'
+import UserSettings from '@/pages/user/UserSettings'
 import TrackDonation from '@/pages/user/Record'
 import HospitalDashboard from '@/pages/hospital/HospitalDashboard'
 import HospitalRequestsPage from '@/pages/hospital/HospitalRequests'
@@ -95,8 +95,8 @@ function App() {
       children: [
         { index: true, element: <Navigate to="/user/dashboard" replace /> },
         { path: 'dashboard', element: <UserDashboard /> },
-        { path: 'history', element: <DonorHistory /> },
         { path: 'track', element: <TrackDonation /> },
+        { path: 'settings', element: <UserSettings /> },
       ],
     },
     {

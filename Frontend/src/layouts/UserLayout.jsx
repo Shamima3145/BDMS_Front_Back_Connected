@@ -20,8 +20,8 @@ const UserLayout = () => {
 
   const menuItems = [
     { path: '/user/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/user/history', icon: Database, label: 'History' },
     { path: '/user/track', icon: FileText, label: 'Records' },
+    { path: '/user/settings', icon: Database, label: 'Settings' },
   ]
 
   const isActive = (path) => location.pathname === path
