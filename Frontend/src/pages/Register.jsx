@@ -78,7 +78,7 @@ const Register = () => {
             {/* Information Panel - Left Side */}
             <div className="bg-gradient-to-br from-[#8c1717] to-[#f45252] p-8 lg:p-12 flex flex-col justify-between text-white">
               <div>
-                <h2 className="text-3xl font-bold mb-6 uppercase tracking-wide">INFORMATION</h2>
+                <h2 className="text-3xl font-bold mb-6 uppercase tracking-wide">Must Read before registration!</h2>
                 <div className="space-y-4 text-sm leading-relaxed">
                   <p>⚠️ <strong>Important Information for Blood Donors</strong></p>
                   <ul className="space-y-2 pl-1">
