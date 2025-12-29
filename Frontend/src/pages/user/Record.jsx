@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { RefreshCw, Calendar, Eye, Download, X } from 'lucide-react'
+import { RefreshCw, Calendar, Eye, X } from 'lucide-react'
 import { toast } from 'react-toastify'
 import DataTable from '@/components/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -71,38 +71,7 @@ const Record = () => {
     setIsCertificateModalOpen(true)
   }
 
-  const handleDownloadCertificate = async () => {
-    try {
-      // Get user's full name from Redux state
-      const userName = user?.name || 'Donor Name'
-      
-      toast.info('Generating certificate...')
-      
-      // Generate PDF blob
-      const blob = await pdf(
-        <CertificatePDF 
-          userName={userName}
-        />
-      ).toBlob()
-      
-      // Create download link
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `certificate-${selectedDonation?.id || 'donation'}-${userName.replace(/\s+/g, '-')}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Clean up
-      setTimeout(() => URL.revokeObjectURL(url), 100)
-      
-      toast.success('Certificate downloaded successfully!')
-    } catch (error) {
-      console.error('Error generating certificate:', error)
-      toast.error('Failed to generate certificate: ' + error.message)
-    }
-  }
+
 
   const getActions = (donation) => [
     {
@@ -110,12 +79,6 @@ const Record = () => {
       onClick: () => handleViewDetails(donation),
       className: 'bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2',
       title: 'View Details',
-    },
-    {
-      icon: Download,
-      onClick: () => handleShowCertificate(donation),
-      className: 'bg-green-500 hover:bg-green-600 text-white rounded-full p-2',
-      title: 'Download Certificate',
     },
   ]
 
@@ -323,17 +286,6 @@ const Record = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Download Button */}
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleDownloadCertificate}
-                  className="bg-green-600 hover:bg-green-700 flex items-center gap-2 px-8 py-3 text-lg"
-                >
-                  <Download className="w-5 h-5" />
-                  Download Certificate
-                </Button>
               </div>
             </div>
           )}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Award, Droplet, Download, Filter, Eye } from 'lucide-react'
-import DataTable from '@components/DataTable'
+import { Calendar, Award, Droplet, Download, Filter, Eye, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/Card'
 import { Button } from '@components/ui/Button'
 import { Select } from '@components/ui/Select'
@@ -258,13 +257,6 @@ const UserDashboard = () => {
       description: `${totalBlood * 450}ml total`,
     },
     {
-      title: 'Lives Saved',
-      value: `~${Math.floor(totalDonations * 3)}`,
-      icon: Award,
-      color: 'bg-green-500',
-      description: 'Estimated impact',
-    },
-    {
       title: 'Last Donation',
       value: lastDonationDate ? formatDate(lastDonationDate) : 'No donation yet',
       icon: Calendar,
@@ -367,7 +359,7 @@ const UserDashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
       >
         {stats.map((stat, index) => {
           const Icon = stat.icon
@@ -397,18 +389,125 @@ const UserDashboard = () => {
         })}
       </motion.div>
 
-      {/* Donation History Table */}
+      {/* Donation Statistics Visualization */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.4 }}
       >
-        <DataTable
-          data={trackData}
-          columns={columns}
-          searchPlaceholder="Search donations..."
-          paginationColor="green"
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              Donation Impact Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Stats Summary */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Your Contribution</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                        <Droplet className="w-5 h-5 text-white fill-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Donations</p>
+                        <p className="text-2xl font-bold text-gray-800">{totalDonations}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Award className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Blood Donated</p>
+                        <p className="text-2xl font-bold text-gray-800">{totalBlood} units</p>
+                        <p className="text-xs text-gray-500">{totalBlood * 450}ml total</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Last Donation</p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {lastDonationDate ? formatDate(lastDonationDate) : 'Not yet'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Chart */}
+              <div className="flex items-center justify-center">
+                <div className="relative w-64 h-64">
+                  {/* Simple Donut Chart */}
+                  <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                    {/* Background circle */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="12"
+                    />
+                    {/* Donations arc (red) */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#ef4444"
+                      strokeWidth="12"
+                      strokeDasharray={`${totalDonations * 8} 251.2`}
+                      strokeLinecap="round"
+                    />
+                    {/* Blood units arc (blue) */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="12"
+                      strokeDasharray={`${totalBlood * 8} 251.2`}
+                      strokeDashoffset={`-${totalDonations * 8}`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <p className="text-3xl font-bold text-gray-800">{totalBlood}</p>
+                    <p className="text-sm text-gray-600">Units Donated</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-6 mt-6 pt-6 border-t">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded"></div>
+                <span className="text-sm text-gray-600">Total Donations</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                <span className="text-sm text-gray-600">Blood Units</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* PDF Preview Modal */}
