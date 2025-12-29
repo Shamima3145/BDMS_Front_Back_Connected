@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake } from 'lucide-react'
+import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake, Phone, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import TestimonialCard from '@/components/TestimonialCard'
 import BloodRequestModal from '@/components/BloodRequestModal'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const LandingPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [donors, setDonors] = useState([])
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState(null)
+  const [isDonorModalOpen, setIsDonorModalOpen] = useState(false)
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -76,26 +79,30 @@ const LandingPage = () => {
     },
   ]
 
-  const testimonials = [
-    {
-      name: 'John Doe',
-      place: 'Dhaka',
-      testimonial:
-        "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    },
-    {
-      name: 'Jane Smith',
-      place: 'Chittagong',
-      testimonial:
-        "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    },
-    {
-      name: 'Mike Johnson',
-      place: 'Sylhet',
-      testimonial:
-        "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-    },
-  ]
+  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+
+  const handleBloodGroupClick = (bloodGroup) => {
+    setSelectedBloodGroup(bloodGroup)
+    setIsDonorModalOpen(true)
+  }
+
+  const getFilteredDonors = () => {
+    if (!selectedBloodGroup) return []
+    return donors.filter(donor => donor.bloodgroup === selectedBloodGroup)
+  }
+
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/donors')
+        console.log('Donors fetched:', response.data)
+        setDonors(response.data.slice(0, 6)) // Show only 6 donors
+      } catch (error) {
+        console.error('Error fetching donors:', error)
+      }
+    }
+    fetchDonors()
+  }, [])
 
   return (
     <div>
@@ -259,9 +266,9 @@ const LandingPage = () => {
         </motion.div>
       </section>
 
-      {/* Testimonials */}
+      {/* Available Donors */}
       <section
-        id="testimonials"
+        id="donors"
         className="py-12 bg-gradient-to-t from-secondary via-[#cbead7] to-[#FFFAEF]"
       >
         <motion.h2
@@ -271,15 +278,106 @@ const LandingPage = () => {
           viewport={{ once: true }}
           className="text-center text-3xl font-bold text-[#942222] mb-9"
         >
-          Testimonials
+          Available Donors
         </motion.h2>
 
-        <div className="max-w-[1240px] mx-auto flex flex-wrap justify-center gap-4 px-4">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard key={index} {...testimonial} />
-          ))}
+        <div className="max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          {bloodGroups.map((bloodGroup, index) => {
+            const donorCount = donors.filter(d => d.bloodgroup === bloodGroup).length
+            return (
+              <motion.div
+                key={bloodGroup}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+                viewport={{ once: true }}
+                onClick={() => handleBloodGroupClick(bloodGroup)}
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all cursor-pointer hover:scale-105 flex flex-col items-center min-w-[160px]"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-3xl font-bold text-[#942222]">
+                    {bloodGroup}
+                  </h3>
+                  <Droplet className="w-6 h-6 text-[#942222] fill-[#942222]" />
+                </div>
+                <p className="text-gray-700 text-2xl font-semibold">
+                  {donorCount}
+                </p>
+              </motion.div>
+            )
+          })}
         </div>
       </section>
+
+      {/* Donor List Modal */}
+      {isDonorModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsDonorModalOpen(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+          >
+            <div className="bg-[#942222] text-white p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                  <Droplet className="w-8 h-8 text-[#942222] fill-[#942222]" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedBloodGroup} Blood Group</h2>
+                  <p className="text-sm opacity-90">{getFilteredDonors().length} Available Donors</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDonorModalOpen(false)}
+                className="text-white hover:bg-white hover:text-[#942222] rounded-full p-2 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+              {getFilteredDonors().length === 0 ? (
+                <div className="text-center py-12 text-gray-600">
+                  <Droplet className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-lg">No donors available for {selectedBloodGroup} blood group</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {getFilteredDonors().map((donor, index) => (
+                    <motion.div
+                      key={donor.id || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 bg-[#942222] rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-[#942222] text-lg truncate">
+                            {donor.firstname} {donor.lastname}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">{donor.area}</p>
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Phone className="w-4 h-4 text-[#942222] flex-shrink-0" />
+                            <span className="text-sm">{donor.contactNumber}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Blood Request Modal */}
       <BloodRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

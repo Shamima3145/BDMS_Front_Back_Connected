@@ -59,7 +59,7 @@ const Navbar = () => {
               <a href="#services" onClick={(e) => scrollToSection(e, '#services')}>Service</a>
             </li>
             <li className="text-primary px-3 py-1 font-medium hover:bg-primary/10 rounded-3xl transition">
-              <a href="#testimonials" onClick={(e) => scrollToSection(e, '#testimonials')}>Testimonials</a>
+              <a href="#donors" onClick={(e) => scrollToSection(e, '#donors')}>Donors</a>
             </li>
           </ul>
 

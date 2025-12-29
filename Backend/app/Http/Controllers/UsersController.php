@@ -945,5 +945,15 @@ class UsersController extends Controller
             ]
         ]);
     }
+
+    // GET ALL DONORS (PUBLIC)
+    public function getDonors()
+    {
+        $donors = User::select('id', 'firstname', 'lastname', 'bloodgroup', 'contactNumber', 'area')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($donors);
+    }
 }
 

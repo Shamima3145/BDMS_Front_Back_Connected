@@ -51,6 +51,9 @@ Route::get('/hospital/blood-bank', [UsersController::class, 'getBloodBank']);
 // STATS ROUTE
 Route::get('/stats', [UsersController::class, 'getStats']);
 
+// DONORS ROUTE (PUBLIC)
+Route::get('/donors', [UsersController::class, 'getDonors']);
+
 // PROTECTED ROUTES
 Route::middleware('auth:sanctum')->group(function () {
 
