@@ -68,7 +68,7 @@ class OtpController extends Controller
             'expires_at' => Carbon::now()->addMinutes(10),
         ]);
 
-        Notification::send($user, new SendOtpNotification($token));
+        Notification::send($user, new SendOtpNotification($token, 'email'));
 
         return back()->with('status', 'A new verification code was sent.');
     }
@@ -121,7 +121,7 @@ class OtpController extends Controller
             'expires_at' => Carbon::now()->addMinutes(10),
         ]);
 
-        Notification::send($user, new SendOtpNotification($token));
+        Notification::send($user, new SendOtpNotification($token, 'email'));
 
         return response()->json(['message' => 'A new verification code was sent.'], 200);
     }
