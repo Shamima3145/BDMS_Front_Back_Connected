@@ -71,7 +71,7 @@ const LandingPage = () => {
     },
     {
       title: 'Are you eligible?',
-      description: 'Donating blood is safe and easy. Find out the eligibility criteria.',
+      description: 'Find out the eligibility criteria before you donate blood.',
       icon: <ClipboardCheck className="w-12 h-12 text-secondary" />,
       bgColor: 'bg-[#FFC269]',
       btnColor: 'text-secondary',
@@ -154,14 +154,9 @@ const LandingPage = () => {
               chance at life. Be the reason someone smiles today.
             </h1>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-              {/* <Link to="/login">
-                <Button className="bg-secondary px-5 py-2 rounded-3xl text-white hover:scale-110 transition-transform">
-                  Donate Now
-                </Button>
-              </Link> */}
               <Button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-[#D40200] hover:bg-[#942222] px-5 py-2 rounded-3xl text-white hover:scale-110 transition-transform flex items-center gap-2"
+                className="bg-[#D40200] hover:bg-[#A61C1C] px-5 py-2 rounded-3xl text-white transition-all duration-300 flex items-center gap-2"
               >
                 <HeartHandshake size={20} />
                 Request Blood
@@ -256,7 +251,7 @@ const LandingPage = () => {
               <div className="flex justify-center">
                 <Button
                   variant="outline"
-                  className={`border-2 ${index === 0 ? 'border-white' : 'border-white'} px-5 py-1 rounded-3xl bg-white ${index === 0 ? 'text-secondary' : service.btnColor} hover:scale-110 font-bold`}
+                  className={`border-2 ${index === 0 ? 'border-white' : 'border-white'} px-5 py-1 rounded-3xl bg-white ${index === 0 ? 'text-secondary hover:bg-secondary hover:text-white' : service.btnColor + (index === 1 ? ' hover:bg-[#1C0F4A] hover:text-white' : ' hover:bg-secondary hover:text-white')} transition-all duration-300 font-bold`}
                 >
                   {index === 0 ? 'Donate Now' : index === 1 ? 'Learn More' : 'Eligibility'}
                 </Button>
