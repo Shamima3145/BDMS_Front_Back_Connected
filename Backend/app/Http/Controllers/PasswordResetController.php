@@ -7,6 +7,7 @@ use App\Models\Hospital;
 use App\Models\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\SendOtpNotification;
 use Carbon\Carbon;
@@ -53,7 +54,7 @@ class PasswordResetController extends Controller
             try {
                 Notification::send($account, new SendOtpNotification($token, 'email'));
             } catch (\Exception $e) {
-                \Log::error('Failed to send OTP email: ' . $e->getMessage());
+                Log::error('Failed to send OTP email: ' . $e->getMessage());
                 // Continue anyway - OTP is saved in database
             }
 
@@ -62,7 +63,7 @@ class PasswordResetController extends Controller
                 'otp' => $token, // Remove this in production!
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Error in sendOtp: ' . $e->getMessage());
+            Log::error('Error in sendOtp: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to send OTP',
                 'error' => $e->getMessage()
