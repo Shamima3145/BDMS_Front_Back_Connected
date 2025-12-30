@@ -48,8 +48,8 @@ class OtpController extends Controller
         $otp->used = true;
         $otp->save();
 
-        $user->otp_verified_at = Carbon::now();
-        $user->save();
+        // $user->otp_verified_at = Carbon::now();
+        // $user->save();
 
         return redirect()->intended('/home')->with('status', 'OTP verified successfully.');
     }
