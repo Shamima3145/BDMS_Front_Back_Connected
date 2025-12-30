@@ -955,5 +955,11 @@ class UsersController extends Controller
 
         return response()->json($donors);
     }
+
+    protected function registered(\Illuminate\Http\Request $request, $user)
+    {
+        // Redirect newly-registered users to the OTP verification page
+        return redirect()->route('otp.verify.form');
+    }
 }
 

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +18,12 @@ Route::post('/login', [UsersController::class, 'login'])->name('login');
 Route::post('/register', [UsersController::class, 'register'])->name('register');
 Route::post('/hospital-register', [UsersController::class, 'hospitalRegister'])->name('hospital.register');
 
-// FORGOT PASSWORD ROUTE
+// PASSWORD RESET WITH OTP ROUTES
+Route::post('/password-reset/send-otp', [PasswordResetController::class, 'sendOtp']);
+Route::post('/password-reset/verify-otp', [PasswordResetController::class, 'verifyOtp']);
+Route::post('/password-reset/reset', [PasswordResetController::class, 'resetPassword']);
+
+// FORGOT PASSWORD ROUTE (old method - kept for backward compatibility)
 Route::post('/forgot-password', [UsersController::class, 'forgotPassword'])->name('forgot.password');
 
 // Admin Routes (accessible with static token)
@@ -88,4 +94,10 @@ Route::middleware('auth:sanctum')->group(function () {
             'hospital' => $request->user(),
         ]);
     })->middleware('role:hospital');
+
+    // OTP API routes (authenticated)
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/otp/verify', [\App\Http\Controllers\Auth\OtpController::class, 'apiVerify']);
+    Route::post('/otp/resend', [\App\Http\Controllers\Auth\OtpController::class, 'apiResend']);
+});
 });
