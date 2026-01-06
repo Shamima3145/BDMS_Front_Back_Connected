@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('blood_requests', function (Blueprint $table) {
-            $table->string('contact')->after('requested_by');
+            if (!Schema::hasColumn('blood_requests', 'contact')) {
+                $table->string('contact')->after('requested_by');
+            }
         });
     }
 
