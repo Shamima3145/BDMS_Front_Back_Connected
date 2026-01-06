@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Hospital;
 use App\Models\BloodRequest;
 use App\Models\BloodBank;
 use App\Models\Admin;
 use App\Models\Donation;
+use App\Mail\DonorNotification;
 
 class UsersController extends Controller
 {
@@ -989,6 +992,47 @@ class UsersController extends Controller
             ->paginate($perPage);
 
         return response()->json($donors);
+    }
+
+    // SEND EMAIL TO DONOR
+    public function sendEmailToDonor(Request $request)
+    {
+        $request->validate([
+            'donor_id' => 'required|exists:users,id',
+            'subject' => 'nullable|string',
+            'message' => 'nullable|string',
+        ]);
+
+        try {
+            $donor = User::findOrFail($request->donor_id);
+            
+            $subject = $request->subject ?? 'Message from Blood Donation Management System';
+            $message = $request->message ?? 'Thank you for being a registered blood donor. Your willingness to donate blood saves lives!';
+            
+            $recipientName = $donor->firstname . ' ' . $donor->lastname;
+            
+            // Send email using the DonorNotification Mailable
+            Mail::to($donor->email)->send(
+                new DonorNotification(
+                    $recipientName,
+                    $subject,
+                    $message,
+                    null,
+                    null,
+                    null
+                )
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully to ' . $donor->email,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     // GET ALL DONORS (PUBLIC)

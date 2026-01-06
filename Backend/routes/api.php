@@ -44,6 +44,9 @@ Route::get('/admin/donations', [UsersController::class, 'getAdminDonations']);
 Route::post('/admin/donations', [UsersController::class, 'createDonation']);
 Route::patch('/admin/donations/{id}', [UsersController::class, 'updateDonation']);
 
+// Admin Email Route
+Route::post('/admin/send-email', [UsersController::class, 'sendEmailToDonor']);
+
 // BLOOD REQUEST ROUTES
 Route::post('/blood-requests', [UsersController::class, 'submitBloodRequest']);
 Route::get('/blood-requests', [UsersController::class, 'getAllBloodRequests']);

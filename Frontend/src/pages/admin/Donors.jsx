@@ -62,11 +62,61 @@ const Donors = () => {
   }
 
   const handleSendSMS = (donor) => {
-    toast.success(`SMS sent to ${donor.firstname} ${donor.lastname} at ${donor.contactNumber}`)
+    // Format phone number for WhatsApp (remove any special characters and spaces)
+    const phoneNumber = donor.contactNumber?.replace(/[^0-9]/g, '')
+    
+    if (!phoneNumber) {
+      toast.error('No contact number available for this donor')
+      return
+    }
+    
+    // Prepare WhatsApp message
+    const message = `Hello ${donor.firstname} ${donor.lastname},
+
+We are reaching out from Blood Donation Management System.
+
+Thank you for being a registered blood donor. Your willingness to donate blood saves lives!
+
+If you have any questions or would like to schedule a donation, please let us know.
+
+Best regards,
+BDMS Team`
+
+    // WhatsApp URL format: https://wa.me/PHONENUMBER?text=MESSAGE
+    // For Bangladesh, add country code 880 if not already present
+    const formattedNumber = phoneNumber.startsWith('880') ? phoneNumber : `880${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}`
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(message)}`
+    
+    // Open WhatsApp in new tab
+    window.open(whatsappUrl, '_blank')
+    toast.success(`Opening WhatsApp for ${donor.firstname} ${donor.lastname}`)
   }
 
-  const handleSendEmail = (donor) => {
-    toast.success(`Email sent to ${donor.firstname} ${donor.lastname} at ${donor.email}`)
+  const handleSendEmail = async (donor) => {
+    try {
+      const token = localStorage.getItem('token')
+      
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/admin/send-email',
+        {
+          donor_id: donor.id,
+          subject: 'Thank You for Being a Blood Donor',
+          message: `Dear ${donor.firstname} ${donor.lastname},\n\nWe want to express our sincere gratitude for being a registered blood donor with us.\n\nYour willingness to donate blood is truly life-saving. Every donation you make has the potential to save up to three lives.\n\nWe appreciate your commitment to this noble cause and look forward to your continued support.\n\nThank you for making a difference!\n\nBest regards,\nBlood Donation Management System Team`
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      
+      if (response.data.success) {
+        toast.success(`Email sent successfully to ${donor.firstname} ${donor.lastname}`)
+      } else {
+        toast.error('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Email error:', error)
+      toast.error('Failed to send email: ' + (error.response?.data?.message || error.message))
+    }
   }
 
   const handleExport = async () => {
