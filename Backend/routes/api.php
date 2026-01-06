@@ -59,6 +59,8 @@ Route::get('/stats', [UsersController::class, 'getStats']);
 
 // DONORS ROUTE (PUBLIC)
 Route::get('/donors', [UsersController::class, 'getDonors']);
+Route::get('/donors/counts-by-blood-group', [UsersController::class, 'getDonorCountsByBloodGroup']);
+Route::get('/donors/blood-group/{bloodGroup}', [UsersController::class, 'getDonorsByBloodGroup']);
 
 // PROTECTED ROUTES
 Route::middleware('auth:sanctum')->group(function () {

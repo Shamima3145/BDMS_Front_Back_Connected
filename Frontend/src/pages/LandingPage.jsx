@@ -8,9 +8,14 @@ import axios from 'axios'
 
 const LandingPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [donors, setDonors] = useState([])
+  const [donorCounts, setDonorCounts] = useState({})
   const [selectedBloodGroup, setSelectedBloodGroup] = useState(null)
   const [isDonorModalOpen, setIsDonorModalOpen] = useState(false)
+  const [paginatedDonors, setPaginatedDonors] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalDonors, setTotalDonors] = useState(0)
+  const [loading, setLoading] = useState(false)
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -81,27 +86,44 @@ const LandingPage = () => {
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
-  const handleBloodGroupClick = (bloodGroup) => {
+  const handleBloodGroupClick = async (bloodGroup) => {
     setSelectedBloodGroup(bloodGroup)
+    setCurrentPage(1)
     setIsDonorModalOpen(true)
+    await fetchDonorsByBloodGroup(bloodGroup, 1)
   }
 
-  const getFilteredDonors = () => {
-    if (!selectedBloodGroup) return []
-    return donors.filter(donor => donor.bloodgroup === selectedBloodGroup)
+  const fetchDonorsByBloodGroup = async (bloodGroup, page = 1) => {
+    try {
+      setLoading(true)
+      const response = await axios.get(`http://127.0.0.1:8000/api/donors/blood-group/${bloodGroup}?page=${page}&per_page=10`)
+      setPaginatedDonors(response.data.data)
+      setTotalPages(response.data.last_page)
+      setTotalDonors(response.data.total)
+      setCurrentPage(response.data.current_page)
+    } catch (error) {
+      console.error('Error fetching donors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      fetchDonorsByBloodGroup(selectedBloodGroup, newPage)
+    }
   }
 
   useEffect(() => {
-    const fetchDonors = async () => {
+    const fetchDonorCounts = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/donors')
-        console.log('Donors fetched:', response.data)
-        setDonors(response.data.slice(0, 6)) // Show only 6 donors
+        const response = await axios.get('http://127.0.0.1:8000/api/donors/counts-by-blood-group')
+        setDonorCounts(response.data)
       } catch (error) {
-        console.error('Error fetching donors:', error)
+        console.error('Error fetching donor counts:', error)
       }
     }
-    fetchDonors()
+    fetchDonorCounts()
   }, [])
 
   return (
@@ -278,7 +300,7 @@ const LandingPage = () => {
 
         <div className="max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
           {bloodGroups.map((bloodGroup, index) => {
-            const donorCount = donors.filter(d => d.bloodgroup === bloodGroup).length
+            const donorCount = donorCounts[bloodGroup] || 0
             return (
               <motion.div
                 key={bloodGroup}
@@ -321,7 +343,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">{selectedBloodGroup} Blood Group</h2>
-                  <p className="text-sm opacity-90">{getFilteredDonors().length} Available Donors</p>
+                  <p className="text-sm opacity-90">{totalDonors} Available Donors</p>
                 </div>
               </div>
               <button
@@ -335,14 +357,20 @@ const LandingPage = () => {
             </div>
             
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-              {getFilteredDonors().length === 0 ? (
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#942222] mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading donors...</p>
+                </div>
+              ) : paginatedDonors.length === 0 ? (
                 <div className="text-center py-12 text-gray-600">
                   <Droplet className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-lg">No donors available for {selectedBloodGroup} blood group</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {getFilteredDonors().map((donor, index) => (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {paginatedDonors.map((donor, index) => (
                     <motion.div
                       key={donor.id || index}
                       initial={{ opacity: 0, y: 10 }}
@@ -367,7 +395,43 @@ const LandingPage = () => {
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6 pt-6 border-t">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+                      <div className="flex gap-1">
+                        {[...Array(totalPages)].map((_, i) => (
+                          <button
+                            key={i + 1}
+                            onClick={() => handlePageChange(i + 1)}
+                            className={`px-3 py-2 rounded-lg transition-colors ${
+                              currentPage === i + 1
+                                ? 'bg-[#942222] text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </motion.div>

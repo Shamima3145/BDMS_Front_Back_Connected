@@ -931,6 +931,25 @@ class UsersController extends Controller
             return $b['units'] - $a['units'];
         });
 
+        // 6. Monthly Trends (last 6 months)
+        $monthlyTrends = [];
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        for ($i = 5; $i >= 0; $i--) {
+            $trendMonth = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->subMonths($i);
+            $trendMonthStart = $trendMonth->copy()->startOfMonth();
+            $trendMonthEnd = $trendMonth->copy()->endOfMonth();
+            
+            $donations = Donation::where('status', 'Completed')
+                ->whereBetween('created_at', [$trendMonthStart, $trendMonthEnd])
+                ->count();
+            
+            $monthlyTrends[] = [
+                'month' => $months[$trendMonth->month - 1],
+                'donations' => $donations,
+            ];
+        }
+
         return response()->json([
             'data' => [
                 'totalDonations' => $currentDonations,
@@ -942,8 +961,34 @@ class UsersController extends Controller
                 'requestsFulfilled' => $currentRequests,
                 'requestsGrowth' => ($requestsGrowth >= 0 ? '+' : '') . $requestsGrowth . '%',
                 'bloodGroupDistribution' => $bloodGroupDistribution,
+                'monthlyTrends' => $monthlyTrends,
             ]
         ]);
+    }
+
+    // GET DONOR COUNTS BY BLOOD GROUP
+    public function getDonorCountsByBloodGroup()
+    {
+        $bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+        $counts = [];
+
+        foreach ($bloodGroups as $group) {
+            $counts[$group] = User::where('bloodgroup', $group)->count();
+        }
+
+        return response()->json($counts);
+    }
+
+    // GET DONORS BY BLOOD GROUP WITH PAGINATION
+    public function getDonorsByBloodGroup(Request $request, $bloodGroup)
+    {
+        $perPage = $request->input('per_page', 10);
+        
+        $donors = User::where('bloodgroup', $bloodGroup)
+            ->select('id', 'firstname', 'lastname', 'bloodgroup', 'email', 'contactNumber', 'area', 'lastDonationDate')
+            ->paginate($perPage);
+
+        return response()->json($donors);
     }
 
     // GET ALL DONORS (PUBLIC)

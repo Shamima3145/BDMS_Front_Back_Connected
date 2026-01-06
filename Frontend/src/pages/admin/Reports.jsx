@@ -14,7 +14,7 @@ import PDFPreviewModal from '@components/modals/PDFPreviewModal'
 const Reports = () => {
   const [reportType, setReportType] = useState('monthly')
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
-  const [selectedYear] = useState(new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [loading, setLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
   const [showPDFModal, setShowPDFModal] = useState(false)
@@ -34,13 +34,16 @@ const Reports = () => {
   })
 
   const [bloodGroupDistribution, setBloodGroupDistribution] = useState([])
-  const monthlyTrends = []
+  const [monthlyTrends, setMonthlyTrends] = useState([])
 
   // Fetch reports statistics
   useEffect(() => {
     const fetchReportsStats = async () => {
       try {
         setLoading(true)
+        console.log('Fetching reports stats...')
+        console.log('Month:', selectedMonth, 'Year:', selectedYear)
+        
         const response = await api.get('/admin/reports-stats', {
           params: {
             month: selectedMonth,
@@ -48,10 +51,15 @@ const Reports = () => {
           },
         })
         
-        console.log('API Response:', response.data)
+        console.log('Full API Response:', response)
+        console.log('Response Data:', response.data)
+        console.log('Response Data.data:', response.data?.data)
+        console.log('Response keys:', Object.keys(response.data || {}))
+        
         const data = response.data?.data
         
         if (data) {
+          console.log('Setting monthly stats with:', data)
           setMonthlyStats({
             totalDonations: data.totalDonations || 0,
             newDonors: data.newDonors || 0,
@@ -63,11 +71,17 @@ const Reports = () => {
             requestsGrowth: data.requestsGrowth || '0%',
           })
           setBloodGroupDistribution(data.bloodGroupDistribution || [])
+          setMonthlyTrends(data.monthlyTrends || [])
+          console.log('Stats updated successfully')
+        } else {
+          console.error('No data found in response')
         }
       } catch (error) {
         console.error('Error fetching reports stats:', error)
+        console.error('Error response:', error.response)
         console.error('Error details:', error.response?.data)
-        toast.error('Failed to fetch reports statistics')
+        console.error('Error message:', error.message)
+        toast.error('Failed to fetch reports statistics: ' + (error.response?.data?.message || error.message))
       } finally {
         setLoading(false)
       }
@@ -193,14 +207,6 @@ const Reports = () => {
           <p className="text-gray-600 mt-1">Track and analyze donation activities</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handlePrintReport} variant="outline">
-            <FileText size={18} className="mr-2" />
-            Print
-          </Button>
-          <Button onClick={handleExportExcel} variant="outline">
-            <Download size={18} className="mr-2" />
-            Excel
-          </Button>
           <Button 
             onClick={handleExportPDF}
             disabled={exportLoading}
@@ -248,8 +254,12 @@ const Reports = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Year
             </label>
-            <Select value={selectedYear} disabled>
-              <option value={selectedYear}>{selectedYear}</option>
+            <Select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
             </Select>
           </div>
         </div>
@@ -309,41 +319,120 @@ const Reports = () => {
             <CardDescription>Donations by blood group this month</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {bloodGroupDistribution.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No data available for this month</p>
-              ) : (
-                bloodGroupDistribution.map((item, index) => (
-                  <motion.div
-                    key={item.group}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.05 }}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                        <span className="font-bold text-red-600">{item.group}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-700">{item.donations} donations ({item.units} units)</span>
-                          <span className="text-sm text-gray-500">{item.percentage}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${item.percentage}%` }}
-                            transition={{ delay: 0.5 + index * 0.05, duration: 0.5 }}
-                            className="bg-red-500 h-2 rounded-full"
+            {bloodGroupDistribution.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data available for this month</p>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                {/* Pie Chart */}
+                <div className="flex items-center justify-center lg:justify-start">
+                  <svg width="220" height="220" viewBox="0 0 220 220" className="transform -rotate-90">
+                    {(() => {
+                      let currentAngle = 0
+                      const colors = [
+                        '#ef4444', '#f97316', '#f59e0b', '#84cc16', 
+                        '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
+                        '#6366f1', '#8b5cf6', '#d946ef', '#ec4899'
+                      ]
+                      
+                      return bloodGroupDistribution.map((item, index) => {
+                        const percentage = parseFloat(item.percentage) / 100
+                        const startAngle = currentAngle
+                        const endAngle = currentAngle + (percentage * 360)
+                        currentAngle = endAngle
+                        
+                        const startRad = (startAngle * Math.PI) / 180
+                        const endRad = (endAngle * Math.PI) / 180
+                        const radius = 90
+                        const centerX = 110
+                        const centerY = 110
+                        
+                        const x1 = centerX + radius * Math.cos(startRad)
+                        const y1 = centerY + radius * Math.sin(startRad)
+                        const x2 = centerX + radius * Math.cos(endRad)
+                        const y2 = centerY + radius * Math.sin(endRad)
+                        
+                        const largeArcFlag = percentage > 0.5 ? 1 : 0
+                        
+                        const pathData = [
+                          `M ${centerX} ${centerY}`,
+                          `L ${x1} ${y1}`,
+                          `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                          'Z'
+                        ].join(' ')
+                        
+                        return (
+                          <motion.path
+                            key={item.group}
+                            d={pathData}
+                            fill={colors[index % colors.length]}
+                            stroke="white"
+                            strokeWidth="2"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
+                            className="hover:opacity-80 transition-opacity cursor-pointer"
                           />
+                        )
+                      })
+                    })()}
+                    {/* Center circle for donut effect */}
+                    <circle cx="110" cy="110" r="50" fill="white" />
+                    <text
+                      x="110"
+                      y="105"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="text-2xl font-bold fill-gray-800"
+                      transform="rotate(90 110 105)"
+                    >
+                      {bloodGroupDistribution.reduce((sum, item) => sum + parseInt(item.units), 0)}
+                    </text>
+                    <text
+                      x="90"
+                      y="120"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="text-xs fill-gray-500"
+                      transform="rotate(90 90 120)"
+                    >
+                      Total Units
+                    </text>
+                  </svg>
+                </div>
+                
+                {/* Legend - 2 Column Grid */}
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4 content-start">
+                  {bloodGroupDistribution.map((item, index) => {
+                    const colors = [
+                      '#ef4444', '#f97316', '#f59e0b', '#84cc16', 
+                      '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
+                      '#6366f1', '#8b5cf6', '#d946ef', '#ec4899'
+                    ]
+                    return (
+                      <motion.div
+                        key={item.group}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 + index * 0.05 }}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                          />
+                          <span className="font-semibold text-gray-800">{item.group}</span>
                         </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span>{item.units} units</span>
+                          <span className="font-medium">{item.percentage}%</span>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -363,36 +452,42 @@ const Reports = () => {
             <CardDescription>Monthly donation statistics</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-end justify-between gap-4">
-              {monthlyTrends.map((item, index) => {
-                const maxValue = Math.max(...monthlyTrends.map(t => t.donations))
-                const height = (item.donations / maxValue) * 100
-                return (
-                  <motion.div
-                    key={item.month}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                    className="flex-1 bg-gradient-to-t from-primary to-primary/60 rounded-t-lg relative group cursor-pointer hover:from-primary/90 hover:to-primary/50 transition-all"
-                  >
-                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded">
-                      {item.donations}
-                    </div>
-                    <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-medium">
-                      {item.month}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-            <div className="mt-8 pt-4 border-t">
-              <div className="flex justify-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <span className="text-gray-600">Donations</span>
+            {monthlyTrends.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data available</p>
+            ) : (
+              <>
+                <div className="h-64 flex items-end justify-between gap-4">
+                  {monthlyTrends.map((item, index) => {
+                    const maxValue = Math.max(...monthlyTrends.map(t => t.donations), 1)
+                    const height = maxValue > 0 ? (item.donations / maxValue) * 100 : 0
+                    return (
+                      <motion.div
+                        key={item.month}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${height}%` }}
+                        transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                        className="flex-1 bg-gradient-to-t from-primary to-primary/60 rounded-t-lg relative group cursor-pointer hover:from-primary/90 hover:to-primary/50 transition-all min-h-[20px]"
+                      >
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                          {item.donations} donations
+                        </div>
+                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-medium">
+                          {item.month}
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </div>
-              </div>
-            </div>
+                <div className="mt-8 pt-4 border-t">
+                  <div className="flex justify-center gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-primary"></div>
+                      <span className="text-gray-600">Donations</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
