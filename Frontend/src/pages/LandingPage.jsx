@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake, Phone, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import BloodRequestModal from '@/components/BloodRequestModal'
@@ -7,7 +7,10 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 const LandingPage = () => {
+  const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEligibilityModalOpen, setIsEligibilityModalOpen] = useState(false)
+  const [isLearnMoreModalOpen, setIsLearnMoreModalOpen] = useState(false)
   const [donorCounts, setDonorCounts] = useState({})
   const [selectedBloodGroup, setSelectedBloodGroup] = useState(null)
   const [isDonorModalOpen, setIsDonorModalOpen] = useState(false)
@@ -60,7 +63,7 @@ const LandingPage = () => {
   const services = [
     {
       title: 'Make an appointment',
-      description: 'Register yourself and select nearby hospital for donation.',
+      description: 'Register yourself and donate blood to save lives.',
       icon: <Calendar className="w-12 h-12 text-white" />,
       bgColor: 'bg-secondary',
       btnColor: 'text-white',
@@ -272,6 +275,15 @@ const LandingPage = () => {
               </span>
               <div className="flex justify-center">
                 <Button
+                  onClick={() => {
+                    if (index === 0) {
+                      navigate('/register')
+                    } else if (index === 1) {
+                      setIsLearnMoreModalOpen(true)
+                    } else if (index === 2) {
+                      setIsEligibilityModalOpen(true)
+                    }
+                  }}
                   variant="outline"
                   className={`border-2 ${index === 0 ? 'border-white' : 'border-white'} px-5 py-1 rounded-3xl bg-white ${index === 0 ? 'text-secondary hover:bg-secondary hover:text-white' : service.btnColor + (index === 1 ? ' hover:bg-[#1C0F4A] hover:text-white' : ' hover:bg-secondary hover:text-white')} transition-all duration-300 font-bold`}
                 >
@@ -440,6 +452,277 @@ const LandingPage = () => {
 
       {/* Blood Request Modal */}
       <BloodRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* Learn More Modal */}
+      {isLearnMoreModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="bg-[#1C0F4A] text-white p-6 rounded-t-2xl">
+              <h2 className="text-2xl font-bold">Learn About Blood Donation Process</h2>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Introduction */}
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p className="text-gray-800 leading-relaxed">
+                  Blood donation is a safe, simple process that typically takes about <strong>45-60 minutes</strong> from start to finish. Your one donation can save up to <strong>three lives</strong>. Here's what you need to know about each step.
+                </p>
+              </div>
+
+              {/* Step 1: Registration */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#1C0F4A] flex items-center gap-2">
+                  <span className="bg-[#1C0F4A] text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
+                  Registration & Sign-Up
+                </h3>
+                <div className="ml-10 space-y-2 text-gray-700">
+                  <p>When you arrive at the donation center:</p>
+                  <ul className="space-y-1">
+                    <li>• Complete a donor registration form</li>
+                    <li>• Provide valid photo identification</li>
+                    <li>• Read information about blood donation</li>
+                    <li>• Sign consent forms</li>
+                  </ul>
+                  <p className="text-sm italic text-gray-600">Time: 5-10 minutes</p>
+                </div>
+              </div>
+
+              {/* Step 2: Health Screening */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#1C0F4A] flex items-center gap-2">
+                  <span className="bg-[#1C0F4A] text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
+                  Health Screening & Mini Physical
+                </h3>
+                <div className="ml-10 space-y-2 text-gray-700">
+                  <p>A trained staff member will:</p>
+                  <ul className="space-y-1">
+                    <li>• Check your temperature, pulse, and blood pressure</li>
+                    <li>• Test a small blood sample for hemoglobin levels</li>
+                    <li>• Review your health history questionnaire</li>
+                    <li>• Answer any questions you may have</li>
+                  </ul>
+                  <p className="text-sm italic text-gray-600">Time: 10-15 minutes</p>
+                </div>
+              </div>
+
+              {/* Step 3: Blood Donation */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#1C0F4A] flex items-center gap-2">
+                  <span className="bg-[#1C0F4A] text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
+                  The Donation Process
+                </h3>
+                <div className="ml-10 space-y-2 text-gray-700">
+                  <p>During the donation:</p>
+                  <ul className="space-y-1">
+                    <li>• You'll be seated in a comfortable reclining chair</li>
+                    <li>• The donation area on your arm will be cleaned with antiseptic</li>
+                    <li>• A new, sterile needle will be used (used only once)</li>
+                    <li>• Approximately <strong>450ml (1 pint)</strong> of blood will be collected</li>
+                    <li>• You can relax, read, or watch videos during donation</li>
+                  </ul>
+                  <p className="text-sm italic text-gray-600">Time: 8-10 minutes for whole blood donation</p>
+                </div>
+              </div>
+
+              {/* Step 4: Refreshments & Recovery */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#1C0F4A] flex items-center gap-2">
+                  <span className="bg-[#1C0F4A] text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span>
+                  Refreshments & Recovery
+                </h3>
+                <div className="ml-10 space-y-2 text-gray-700">
+                  <p>After donating:</p>
+                  <ul className="space-y-1">
+                    <li>• Rest for 10-15 minutes in the refreshment area</li>
+                    <li>• Enjoy snacks and beverages to replenish your fluids</li>
+                    <li>• Staff will monitor how you're feeling</li>
+                    <li>• Receive information about post-donation care</li>
+                  </ul>
+                  <p className="text-sm italic text-gray-600">Time: 10-15 minutes</p>
+                </div>
+              </div>
+
+              {/* After Donation Care */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <Coffee className="w-6 h-6" />
+                  After Donation Care
+                </h3>
+                <div className="ml-8 space-y-2 text-gray-700">
+                  <ul className="space-y-1">
+                    <li>• Keep the bandage on for at least 4 hours</li>
+                    <li>• Drink extra fluids for the next 24-48 hours</li>
+                    <li>• Avoid strenuous activities for the rest of the day</li>
+                    <li>• Eat iron-rich foods to help replace lost iron</li>
+                    <li>• If you feel faint, lie down with your feet elevated</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* What Happens to Your Blood */}
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded space-y-2">
+                <h4 className="font-semibold text-green-900">What Happens to Your Blood?</h4>
+                <ul className="space-y-1 text-green-900 text-sm">
+                  <li>• Your blood is tested for blood type and infectious diseases</li>
+                  <li>• It's separated into components (red cells, platelets, plasma)</li>
+                  <li>• Each component can help different patients</li>
+                  <li>• Your blood may save up to 3 lives!</li>
+                </ul>
+              </div>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                <p className="text-sm text-yellow-900">
+                  <strong>Important:</strong> You can donate whole blood every <strong>12-16 weeks</strong>. Your body replenishes the donated blood within 24-48 hours, but it's important to wait the full period between donations.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  onClick={() => setIsLearnMoreModalOpen(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsLearnMoreModalOpen(false)
+                    navigate('/register')
+                  }}
+                  className="bg-[#1C0F4A] hover:bg-[#0f0829] text-white px-6 py-2 rounded-lg"
+                >
+                  Ready to Donate
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Eligibility Modal */}
+      {isEligibilityModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="bg-[#942222] text-white p-6 rounded-t-2xl">
+              <h2 className="text-2xl font-bold">Blood Donation Eligibility Criteria</h2>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Age Requirements */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+                  Age Requirements
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Must be between 18-65 years old</li>
+                  <li>• First-time donors must be under 60 years old</li>
+                </ul>
+              </div>
+
+              {/* Weight Requirements */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
+                  Weight Requirements
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Minimum weight: 50 kg (110 lbs)</li>
+                  <li>• Must be in good overall health</li>
+                </ul>
+              </div>
+
+              {/* Health Conditions */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+                  Health Conditions
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Free from cold, flu, or infections</li>
+                  <li>• No chronic illnesses (diabetes, heart disease, etc.)</li>
+                  <li>• Not currently on antibiotics or certain medications</li>
+                  <li>• Normal blood pressure and pulse</li>
+                </ul>
+              </div>
+
+              {/* Time Between Donations */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">4</span>
+                  Time Between Donations
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Men: At least 12 weeks (3 months) between donations</li>
+                  <li>• Women: At least 16 weeks (4 months) between donations</li>
+                </ul>
+              </div>
+
+              {/* Lifestyle Requirements */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">5</span>
+                  Lifestyle Requirements
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Had adequate sleep the night before (at least 6 hours)</li>
+                  <li>• Eaten a proper meal within 4 hours of donation</li>
+                  <li>• Well hydrated (drink plenty of water)</li>
+                  <li>• No alcohol consumption 24 hours before donation</li>
+                </ul>
+              </div>
+
+              {/* Temporary Deferrals */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-[#942222] flex items-center gap-2">
+                  <span className="bg-[#942222] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">6</span>
+                  Temporary Deferrals
+                </h3>
+                <ul className="ml-8 space-y-1 text-gray-700">
+                  <li>• Recent tattoos or piercings (wait 6 months)</li>
+                  <li>• Recent dental work (wait 24 hours)</li>
+                  <li>• Recent vaccination (varies by type)</li>
+                  <li>• Pregnancy or recent childbirth (wait 6 months after delivery)</li>
+                  <li>• Recent surgery (varies by procedure)</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p className="text-sm text-blue-900">
+                  <strong>Note:</strong> These are general guidelines. Final eligibility will be determined during the health screening at the donation center. Always consult with medical staff if you have any concerns.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  onClick={() => setIsEligibilityModalOpen(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsEligibilityModalOpen(false)
+                    navigate('/register')
+                  }}
+                  className="bg-[#942222] hover:bg-[#7a1b1b] text-white px-6 py-2 rounded-lg"
+                >
+                  I'm Eligible - Donate Now
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

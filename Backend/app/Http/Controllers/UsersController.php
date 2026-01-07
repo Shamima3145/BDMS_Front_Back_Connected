@@ -592,7 +592,7 @@ class UsersController extends Controller
         $totalRequests = BloodRequest::count();
 
         // Get approved requests
-        $approvedRequests = BloodRequest::where('status', 'approved')->count();
+        $approvedRequests = BloodRequest::whereIn('status', ['Accept', 'Accepted', 'accepted'])->count();
 
         // Get total blood inventory
         $totalInventory = BloodBank::selectRaw('

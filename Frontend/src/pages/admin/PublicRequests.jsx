@@ -80,8 +80,34 @@ const PublicRequests = () => {
           item.id === row.id ? { ...item, status: 'Accept' } : item
         )
       )
+
+      // Send WhatsApp message
+      handleSendWhatsApp(row)
     } catch (error) {
       toast.error('Failed to accept request')
+    }
+  }
+
+  const handleSendWhatsApp = (row) => {
+    try {
+      // Format phone number for Bangladesh (remove any spaces, dashes, etc.)
+      let phone = row.contact.replace(/[^0-9]/g, '')
+      
+      // Add country code if not present
+      if (phone.startsWith('0')) {
+        phone = '880' + phone.substring(1)
+      } else if (!phone.startsWith('880')) {
+        phone = '880' + phone
+      }
+
+      const message = `Dear ${row.by},\n\nYour blood request has been ACCEPTED!\n\n📋 Request Details:\nRequest ID: ${row.id}\nPatient Name: ${row.patient}\nBlood Group: ${row.blood}\nUnits Required: ${row.units}\n\nWe will arrange the blood donation as soon as possible.\n\nThank you,\nBlood Donation Management System`
+
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+      window.open(whatsappUrl, '_blank')
+      
+      toast.success('Opening WhatsApp...')
+    } catch (error) {
+      toast.error('Failed to open WhatsApp')
     }
   }
 
