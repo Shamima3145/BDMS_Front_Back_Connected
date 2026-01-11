@@ -113,9 +113,32 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#666',
   },
+  summaryBox: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#fef2f2',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#dc2626',
+  },
+  summaryTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#dc2626',
+    marginBottom: 8,
+  },
+  summaryText: {
+    fontSize: 9,
+    color: '#666',
+    marginBottom: 4,
+  },
+  highlightText: {
+    fontWeight: 'bold',
+    color: '#111',
+  },
 })
 
-const ReportsAnalyticsPDF = ({ monthlyStats, bloodGroupDistribution, selectedMonth, selectedYear }) => {
+const ReportsAnalyticsPDF = ({ monthlyStats, bloodGroupDistribution, monthlyTrends, selectedMonth, selectedYear }) => {
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -128,6 +151,7 @@ const ReportsAnalyticsPDF = ({ monthlyStats, bloodGroupDistribution, selectedMon
   ]
 
   const selectedMonthName = months[selectedMonth - 1]
+  const totalUnits = bloodGroupDistribution.reduce((sum, item) => sum + parseInt(item.units || 0), 0)
 
   return (
     <Document>
@@ -173,6 +197,9 @@ const ReportsAnalyticsPDF = ({ monthlyStats, bloodGroupDistribution, selectedMon
         {bloodGroupDistribution.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Blood Group Distribution</Text>
+            <Text style={{ fontSize: 9, color: '#666', marginBottom: 10 }}>
+              Total Units Collected: {totalUnits}
+            </Text>
             <View style={styles.tableHeader}>
               <Text style={styles.col1}>Blood Group</Text>
               <Text style={styles.col2}>Donations</Text>
@@ -192,6 +219,66 @@ const ReportsAnalyticsPDF = ({ monthlyStats, bloodGroupDistribution, selectedMon
             ))}
           </>
         )}
+
+        {/* Monthly Trends */}
+        {monthlyTrends && monthlyTrends.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Donation Trends</Text>
+            <Text style={{ fontSize: 9, color: '#666', marginBottom: 10 }}>
+              Monthly donation statistics for the current year
+            </Text>
+            <View style={styles.tableHeader}>
+              <Text style={{ width: '50%' }}>Month</Text>
+              <Text style={{ width: '50%' }}>Donations</Text>
+            </View>
+            {monthlyTrends.map((item, index) => (
+              <View
+                key={item.month}
+                style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+              >
+                <Text style={{ width: '50%' }}>{item.month}</Text>
+                <Text style={{ width: '50%' }}>{item.donations}</Text>
+              </View>
+            ))}
+            <View style={{ marginTop: 10, padding: 10, backgroundColor: '#f9fafb', borderRadius: 4 }}>
+              <Text style={{ fontSize: 9, color: '#666' }}>
+                Total Donations (Year to Date): {monthlyTrends.reduce((sum, item) => sum + item.donations, 0)}
+              </Text>
+              <Text style={{ fontSize: 9, color: '#666', marginTop: 3 }}>
+                Average per Month: {(monthlyTrends.reduce((sum, item) => sum + item.donations, 0) / monthlyTrends.length).toFixed(1)}
+              </Text>
+            </View>
+          </>
+        )}
+
+        {/* Summary Section */}
+        <View style={styles.summaryBox}>
+          <Text style={styles.summaryTitle}>Report Summary</Text>
+          <Text style={styles.summaryText}>
+            During <Text style={styles.highlightText}>{selectedMonthName} {selectedYear}</Text>, the Blood Donation Management System recorded:
+          </Text>
+          <Text style={styles.summaryText}>
+            • <Text style={styles.highlightText}>{monthlyStats.totalDonations}</Text> total donations (
+            {monthlyStats.donationsGrowth} compared to the previous month)
+          </Text>
+          <Text style={styles.summaryText}>
+            • <Text style={styles.highlightText}>{monthlyStats.newDonors}</Text> new donors registered (
+            {monthlyStats.donorsGrowth} growth)
+          </Text>
+          <Text style={styles.summaryText}>
+            • <Text style={styles.highlightText}>{(monthlyStats.bloodCollected * 0.45).toFixed(1)}L</Text> of blood collected from {monthlyStats.bloodCollected} units (
+            {monthlyStats.bloodGrowth} increase)
+          </Text>
+          <Text style={styles.summaryText}>
+            • <Text style={styles.highlightText}>{monthlyStats.requestsFulfilled}</Text> blood requests successfully fulfilled (
+            {monthlyStats.requestsGrowth} improvement)
+          </Text>
+          {bloodGroupDistribution.length > 0 && (
+            <Text style={styles.summaryText}>
+              • Most common blood group: <Text style={styles.highlightText}>{bloodGroupDistribution[0]?.group}</Text> with {bloodGroupDistribution[0]?.percentage}% of donations
+            </Text>
+          )}
+        </View>
 
         {/* Footer */}
         <View style={styles.footer}>

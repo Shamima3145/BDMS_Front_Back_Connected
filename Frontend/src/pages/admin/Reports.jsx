@@ -99,6 +99,7 @@ const Reports = () => {
         <ReportsAnalyticsPDF
           monthlyStats={monthlyStats}
           bloodGroupDistribution={bloodGroupDistribution}
+          monthlyTrends={monthlyTrends}
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
         />
