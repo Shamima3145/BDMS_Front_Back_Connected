@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake, Phone, User } from 'lucide-react'
+import { Droplet, Calendar, ClipboardCheck, BookOpen, UserPlus, Stethoscope, Coffee, HeartHandshake, Phone, User, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import BloodRequestModal from '@/components/BloodRequestModal'
 import { useState, useEffect } from 'react'
@@ -19,6 +19,8 @@ const LandingPage = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [totalDonors, setTotalDonors] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [selectedDonor, setSelectedDonor] = useState(null)
+  const [isContactMenuOpen, setIsContactMenuOpen] = useState(false)
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -115,6 +117,42 @@ const LandingPage = () => {
     if (newPage >= 1 && newPage <= totalPages) {
       fetchDonorsByBloodGroup(selectedBloodGroup, newPage)
     }
+  }
+
+  const handleDonorNameClick = (donor) => {
+    setSelectedDonor(donor)
+    setIsContactMenuOpen(true)
+  }
+
+  const handleCallNow = () => {
+    if (selectedDonor && selectedDonor.contactNumber) {
+      window.location.href = `tel:${selectedDonor.contactNumber}`
+    }
+    setIsContactMenuOpen(false)
+  }
+
+  const handleWhatsAppNow = () => {
+    if (selectedDonor && selectedDonor.contactNumber) {
+      // Remove any spaces, dashes, or special characters from phone number
+      let cleanNumber = selectedDonor.contactNumber.replace(/[^0-9+]/g, '')
+      
+      // If number starts with 0, replace with Bangladesh country code
+      if (cleanNumber.startsWith('0')) {
+        cleanNumber = '880' + cleanNumber.substring(1)
+      }
+      
+      // If number doesn't have country code, add Bangladesh code
+      if (!cleanNumber.startsWith('+') && !cleanNumber.startsWith('880')) {
+        cleanNumber = '880' + cleanNumber
+      }
+      
+      // Remove + if exists for wa.me format
+      cleanNumber = cleanNumber.replace('+', '')
+      
+      // WhatsApp URL format: https://wa.me/phonenumber (opens chat directly)
+      window.open(`https://wa.me/${cleanNumber}`, '_blank')
+    }
+    setIsContactMenuOpen(false)
   }
 
   useEffect(() => {
@@ -381,32 +419,63 @@ const LandingPage = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {paginatedDonors.map((donor, index) => (
-                    <motion.div
-                      key={donor.id || index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-[#942222] rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-[#942222] text-lg truncate">
-                            {donor.firstname} {donor.lastname}
-                          </h3>
-                          <p className="text-sm text-gray-600 mb-2">{donor.area}</p>
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Phone className="w-4 h-4 text-[#942222] flex-shrink-0" />
-                            <span className="text-sm">{donor.contactNumber}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {/* Table View */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-[#942222] text-white">
+                          <th className="px-4 py-3 text-left font-semibold">#</th>
+                          <th className="px-4 py-3 text-left font-semibold">Donor Name</th>
+                          <th className="px-4 py-3 text-left font-semibold">Location</th>
+                          <th className="px-4 py-3 text-left font-semibold">Contact</th>
+                          <th className="px-4 py-3 text-center font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedDonors.map((donor, index) => (
+                          <motion.tr
+                            key={donor.id || index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.03 }}
+                            className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-4 text-gray-700 font-medium">
+                              {(currentPage - 1) * 10 + index + 1}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-[#942222] rounded-full flex items-center justify-center flex-shrink-0">
+                                  <User className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="font-semibold text-[#942222]">
+                                  {donor.firstname} {donor.lastname}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-gray-700">
+                              {donor.area}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2 text-gray-700">
+                                <Phone className="w-4 h-4 text-[#942222] flex-shrink-0" />
+                                <span className="text-sm font-medium">{donor.contactNumber}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleDonorNameClick(donor)}
+                                  className="px-4 py-2 bg-[#942222] text-white rounded-lg hover:bg-[#D40200] transition-colors text-sm font-medium"
+                                >
+                                  Contact
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                   
                   {/* Pagination */}
@@ -445,6 +514,71 @@ const LandingPage = () => {
                   )}
                 </>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Contact Menu Modal */}
+      {isContactMenuOpen && selectedDonor && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4" onClick={() => setIsContactMenuOpen(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-[#942222] to-[#D40200] text-white p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-[#942222]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">{selectedDonor.firstname} {selectedDonor.lastname}</h3>
+                  <p className="text-sm opacity-90">{selectedDonor.area}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-3">
+              <p className="text-gray-700 text-center mb-4">Choose how you'd like to contact</p>
+              
+              {/* Call Now Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCallNow}
+                className="w-full flex items-center justify-center gap-3 bg-[#4CAF50] hover:bg-[#45a049] text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all"
+              >
+                <Phone className="w-6 h-6" />
+                <span className="text-lg">Call Now</span>
+              </motion.button>
+
+              {/* WhatsApp Now Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleWhatsAppNow}
+                className="w-full flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all"
+              >
+                <MessageCircle className="w-6 h-6" />
+                <span className="text-lg">WhatsApp Now</span>
+              </motion.button>
+
+              {/* Phone Number Display */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-center text-gray-600 text-sm">Contact Number</p>
+                <p className="text-center text-[#942222] font-bold text-lg">{selectedDonor.contactNumber}</p>
+              </div>
+
+              {/* Cancel Button */}
+              <button
+                onClick={() => setIsContactMenuOpen(false)}
+                className="w-full mt-2 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </motion.div>
         </div>

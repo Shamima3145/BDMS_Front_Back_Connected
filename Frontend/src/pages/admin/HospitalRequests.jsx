@@ -136,11 +136,37 @@ const HospitalRequests = () => {
       // Update local state
       setHospitalRequestsData(prevData =>
         prevData.map(item =>
-          item.id === row.id ? { ...item, status: 'declined' } : item
+          item.id === row.id ? { ...item, status: 'Decline' } : item
         )
       )
+
+      // Send WhatsApp decline message
+      handleSendDeclineWhatsApp(row)
     } catch (error) {
       toast.error('Failed to decline request')
+    }
+  }
+
+  const handleSendDeclineWhatsApp = (row) => {
+    try {
+      // Format phone number for Bangladesh (remove any spaces, dashes, etc.)
+      let phone = row.contact.replace(/[^0-9]/g, '')
+      
+      // Add country code if not present
+      if (phone.startsWith('0')) {
+        phone = '880' + phone.substring(1)
+      } else if (!phone.startsWith('880')) {
+        phone = '880' + phone
+      }
+
+      const message = `Dear ${row.by},\n\nWe sincerely apologize, but your blood request has been DECLINED.\n\n📋 Request Details:\nRequest ID: ${row.id}\nHospital: ${row.hospital}\nBlood Group: ${row.blood}\nUnits Required: ${row.units}\n\n❌ Reason: Unfortunately, we are unable to fulfill this request at this time due to unavailability of matching donors or other constraints.\n\nWe apologize for any inconvenience caused. Please try again later or contact us for alternative arrangements.\n\nThank you for understanding,\nBlood Donation Management System`
+
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+      window.open(whatsappUrl, '_blank')
+      
+      toast.info('Opening WhatsApp for decline notification...')
+    } catch (error) {
+      toast.error('Failed to open WhatsApp')
     }
   }
 
